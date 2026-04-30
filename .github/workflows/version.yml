@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   bump:
-    if: ${{ !startsWith(github.event.head_commit.message, 'bump version to') }}
+    if: ${{ !startsWith(github.event.head_commit.message, 'Release v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,7 +43,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add version.txt
-          git commit -m "bump version to ${{ steps.bump.outputs.version }}"
+          git commit -m "Release v${{ steps.bump.outputs.version }}"
           git push
 
       - name: Create release
