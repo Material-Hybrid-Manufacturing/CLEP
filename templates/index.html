@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLEP — Calculator for Laser Experimentation Process</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div id="boot" aria-hidden="true">
+    <div id="boot-stack" class="boot-stack">
+      <div class="boot-line" data-line="C"><span class="ch first">C</span><span class="rest">alculator</span></div>
+      <div class="boot-line for"><span class="full-word">for</span></div>
+      <div class="boot-line" data-line="L"><span class="ch first">L</span><span class="rest">aser</span></div>
+      <div class="boot-line" data-line="E"><span class="ch first">E</span><span class="rest">xperimentation</span></div>
+      <div class="boot-line" data-line="P"><span class="ch first">P</span><span class="rest">rocess</span></div>
+    </div>
+  </div>
+
+  <header id="app-header" class="hidden-on-boot">
+    <div class="brand"><span>C</span><span>L</span><span>E</span><span>P</span></div>
+    <nav class="page-tabs">
+      <button class="page-tab active" data-page="calculator">Calculator</button>
+      <button class="page-tab" data-page="equipment">Equipment Database</button>
+      <button class="page-tab" data-page="experiments">Experiments</button>
+    </nav>
+    <img class="logo" src="{{ url_for('static', filename='logo.svg') }}" alt="MATERIAL"
+         onerror="this.outerHTML='&lt;span class=&quot;logo-text&quot;&gt;MATERIAL&lt;/span&gt;'">
+  </header>
+
+  <main id="app-main" class="hidden-on-boot">
+
+    <section id="page-calculator" class="page">
+      <div class="calc-grid">
+        <div class="card">
+          <h2>Inputs</h2>
+
+          <label class="field">
+            <span>Distance from Lens to Workpiece (mm)</span>
+            <input type="number" id="z-height" step="0.1" value="163" min="0">
+          </label>
+
+          <label class="field">
+            <span>Galvo Scanner</span>
+            <select id="galvo-select"></select>
+          </label>
+
+          <label class="field">
+            <span>F-Theta Lens</span>
+            <select id="lens-select"></select>
+          </label>
+
+          <div class="warning hidden" id="mismatch-warning"></div>
+
+          <div class="field toggle-row">
+            <span>Beam Expander</span>
+            <button type="button" id="expander-toggle" class="toggle off" aria-pressed="false">
+              <span class="toggle-mark">✕</span>
+              <span class="toggle-label">Off</span>
+            </button>
+          </div>
+
+          <div class="hint italic" id="aperture-hint">Assumption: beam fills full aperture</div>
+
+          <div class="expander-fields collapsed" id="expander-fields">
+            <label class="field">
+              <span>Expander Magnification</span>
+              <input type="number" id="magnification" step="0.1" min="0" value="2">
+            </label>
+            <label class="field">
+              <span>Laser Beam Diameter before expander (mm)</span>
+              <input type="number" id="laser-diameter" step="0.1" min="0" value="4">
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Outputs</h2>
+          <div class="outputs" aria-live="polite">
+            <div class="output">
+              <div class="output-label">Beam Waist at Focus w₀</div>
+              <div class="output-value"><span id="out-w0">—</span> µm</div>
+            </div>
+            <div class="output">
+              <div class="output-label">Rayleigh Range z_R</div>
+              <div class="output-value"><span id="out-zr">—</span> mm</div>
+            </div>
+            <div class="output">
+              <div class="output-label">Spot Radius at Z height w(z)</div>
+              <div class="output-value"><span id="out-wz">—</span> µm</div>
+            </div>
+            <div class="output">
+              <div class="output-label">Spot Diameter at Z height</div>
+              <div class="output-value"><span id="out-spot">—</span> µm</div>
+            </div>
+            <div class="output">
+              <div class="output-label">Depth of Focus ± z_R</div>
+              <div class="output-value">±<span id="out-dof">—</span> mm</div>
+            </div>
+          </div>
+
+          <div class="error hidden" id="calc-error"></div>
+
+          <details class="equations">
+            <summary>Show Equations</summary>
+            <div class="eq-body">
+              <p><strong>w₀</strong> = (λ × f) / (π × w_in)</p>
+              <p><strong>z_R</strong> = (π × w₀²) / λ</p>
+              <p><strong>w(z)</strong> = w₀ × √(1 + (z / z_R)²)</p>
+              <p class="note">When beam expander is active: w_in = w_laser × M</p>
+              <ul class="defs">
+                <li>λ — wavelength (from F-Theta lens)</li>
+                <li>f — focal length of F-Theta lens</li>
+                <li>w_in — input beam radius at the lens</li>
+                <li>z — offset from focal plane (= Z height − f)</li>
+                <li>M — beam expander magnification</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="stub-panel" aria-disabled="true">
+        <h3>Energy Density / Fluence — Coming Soon</h3>
+        <div class="stub-row">Inputs for pulse energy and repetition rate will appear here.</div>
+      </div>
+
+      <div class="stub-panel" aria-disabled="true">
+        <h3>Z Axis Calibration — Coming Soon</h3>
+        <div class="stub-row">Live readout from /sensor/z will appear here.</div>
+      </div>
+    </section>
+
+    <section id="page-equipment" class="page hidden">
+      <div class="sub-tabs">
+        <button class="sub-tab active" data-eq-tab="galvo">Galvo Scanners</button>
+        <button class="sub-tab" data-eq-tab="lens">F-Theta Lenses</button>
+        <button class="sub-tab" data-eq-tab="expander">Beam Expanders</button>
+      </div>
+
+      <div class="eq-pane" data-eq-pane="galvo">
+        <table class="eq-table" id="table-galvo"></table>
+        <form class="eq-form" data-kind="galvo">
+          <h3>Add New Galvo Scanner</h3>
+          <label class="field"><span>Manufacturer</span><input name="manufacturer" required></label>
+          <label class="field"><span>Model Number</span><input name="model_number" required></label>
+          <label class="field"><span>Input Aperture (mm)</span><input type="number" step="0.01" name="input_aperture_mm" required></label>
+          <label class="field"><span>Optimized Wavelength (nm)</span><input type="number" step="0.1" name="optimized_wavelength_nm" required></label>
+          <label class="field"><span>Full Mechanical Angle (degrees)</span><input type="number" step="0.1" name="full_mechanical_angle_deg"></label>
+          <label class="field"><span>Full Optical Angle (degrees)</span><input type="number" step="0.1" name="full_optical_angle_deg"></label>
+          <label class="field"><span>Notes</span><input name="notes"></label>
+          <button type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="eq-pane hidden" data-eq-pane="lens">
+        <table class="eq-table" id="table-lens"></table>
+        <form class="eq-form" data-kind="lens">
+          <h3>Add New F-Theta Lens</h3>
+          <label class="field"><span>Manufacturer</span><input name="manufacturer" required></label>
+          <label class="field"><span>Model Number</span><input name="model_number" required></label>
+          <label class="field"><span>Focal Length (mm)</span><input type="number" step="0.01" name="focal_length_mm" required></label>
+          <label class="field"><span>Field Size (mm)</span><input type="number" step="0.01" name="field_size_mm"></label>
+          <label class="field"><span>Optimized Wavelength (nm)</span><input type="number" step="0.1" name="optimized_wavelength_nm" required></label>
+          <label class="field"><span>Input Aperture (mm)</span><input type="number" step="0.01" name="input_aperture_mm" required></label>
+          <label class="field"><span>Notes</span><input name="notes"></label>
+          <button type="submit">Add</button>
+        </form>
+      </div>
+
+      <div class="eq-pane hidden" data-eq-pane="expander">
+        <table class="eq-table" id="table-expander"></table>
+        <form class="eq-form" data-kind="expander">
+          <h3>Add New Beam Expander</h3>
+          <label class="field"><span>Manufacturer</span><input name="manufacturer" required></label>
+          <label class="field"><span>Model Number</span><input name="model_number" required></label>
+          <label class="field"><span>Magnification</span><input type="number" step="0.1" name="magnification" required></label>
+          <label class="field"><span>Input Beam Diameter (mm)</span><input type="number" step="0.01" name="input_beam_diameter_mm"></label>
+          <label class="field"><span>Output Beam Diameter (mm)</span><input type="number" step="0.01" name="output_beam_diameter_mm"></label>
+          <label class="field"><span>Optimized Wavelength (nm)</span><input type="number" step="0.1" name="optimized_wavelength_nm"></label>
+          <label class="field"><span>Notes</span><input name="notes"></label>
+          <button type="submit">Add</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="page-experiments" class="page hidden">
+      <div class="exp-topbar">
+        <button type="button" id="filter-toggle" class="filter-toggle">Filter ▾</button>
+        <button type="button" id="new-specimen-btn" class="primary">+ New Specimen</button>
+      </div>
+
+      <div class="filter-panel collapsed" id="filter-panel">
+        <div class="filter-group">
+          <div class="filter-label">Test Types</div>
+          <div class="filter-checkboxes" id="filter-test-types"></div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Galvo Scanner</div>
+          <div class="filter-checkboxes" id="filter-galvo"></div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">F-Theta Lens</div>
+          <div class="filter-checkboxes" id="filter-lens"></div>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">Laser Diode</div>
+          <div class="filter-checkboxes" id="filter-diode"></div>
+        </div>
+
+        <div class="filter-ranges">
+          <div class="filter-range">
+            <div class="filter-label">Power (W)</div>
+            <div class="range-row"><input type="number" step="0.1" data-range="power_min" placeholder="min"><input type="number" step="0.1" data-range="power_max" placeholder="max"></div>
+          </div>
+          <div class="filter-range">
+            <div class="filter-label">Scan Speed (mm/s)</div>
+            <div class="range-row"><input type="number" step="1" data-range="scan_speed_min" placeholder="min"><input type="number" step="1" data-range="scan_speed_max" placeholder="max"></div>
+          </div>
+          <div class="filter-range">
+            <div class="filter-label">Fluence (J/mm²)</div>
+            <div class="range-row"><input type="number" step="0.01" data-range="fluence_min" placeholder="min"><input type="number" step="0.01" data-range="fluence_max" placeholder="max"></div>
+          </div>
+          <div class="filter-range">
+            <div class="filter-label">VED (J/mm³)</div>
+            <div class="range-row"><input type="number" step="0.1" data-range="ved_min" placeholder="min"><input type="number" step="0.1" data-range="ved_max" placeholder="max"></div>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="button" id="apply-filters" class="primary">Apply Filters</button>
+          <button type="button" id="clear-filters">Clear Filters</button>
+        </div>
+      </div>
+
+      <div class="exp-grid" id="exp-grid"></div>
+      <div class="exp-empty hidden" id="exp-empty">No specimens match the current filters.</div>
+    </section>
+
+  </main>
+
+  <div class="overlay" id="overlay-new-specimen" hidden>
+    <button type="button" class="overlay-close" id="overlay-close-btn" aria-label="Close">×</button>
+    <div class="overlay-body">
+      <div class="overlay-pane">
+        <h2>New Specimen</h2>
+
+        <label class="field">
+          <span>Specimen Label</span>
+          <input type="text" name="specimen_label" id="ns-label">
+        </label>
+
+        <label class="field">
+          <span>Test Type</span>
+          <div class="select-with-gear">
+            <select name="test_type" id="ns-test-type"></select>
+            <button type="button" class="gear-btn" id="ns-gear" aria-label="Manage test types" title="Manage test types">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+          </div>
+        </label>
+
+        <div class="type-manager hidden" id="type-manager">
+          <div class="type-manager-list" id="type-manager-list"></div>
+          <div class="type-manager-add">
+            <input type="text" id="new-type-input" placeholder="New test type">
+            <button type="button" id="add-type-btn">Add</button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>Galvo Scanner</span>
+          <input type="text" name="galvo_scanner" id="ns-galvo">
+        </label>
+        <label class="field">
+          <span>F-Theta Lens</span>
+          <input type="text" name="f_theta_lens" id="ns-lens">
+        </label>
+        <label class="field">
+          <span>Laser Diode</span>
+          <input type="text" name="laser_diode" id="ns-diode">
+        </label>
+
+        <div class="field toggle-row">
+          <span>Beam Expander</span>
+          <button type="button" id="ns-expander-toggle" class="toggle off" aria-pressed="false">
+            <span class="toggle-mark">✕</span>
+            <span class="toggle-label">Off</span>
+          </button>
+        </div>
+
+        <div class="expander-fields collapsed" id="ns-expander-fields">
+          <label class="field">
+            <span>Beam Expander Model</span>
+            <input type="text" name="beam_expander_model" id="ns-expander-model">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Power (W)</span>
+          <input type="number" step="0.1" min="0" name="power" id="ns-power">
+        </label>
+        <label class="field">
+          <span>Scan Speed (mm/s)</span>
+          <input type="number" step="1" min="0" name="scan_speed" id="ns-speed">
+        </label>
+        <label class="field">
+          <span>Spot Diameter (µm)</span>
+          <input type="number" step="0.1" min="0" name="spot_diameter" id="ns-spot">
+        </label>
+        <label class="field">
+          <span>Hatch Distance (µm)</span>
+          <input type="number" step="0.1" min="0" name="hatch_distance" id="ns-hatch">
+        </label>
+        <label class="field">
+          <span>Layer Thickness (µm)</span>
+          <input type="number" step="0.1" min="0" name="layer_thickness" id="ns-layer">
+        </label>
+        <label class="field">
+          <span>Scan Strategy</span>
+          <input type="text" name="scan_strategy" id="ns-strategy">
+        </label>
+
+        <div class="preview-row">
+          <button type="button" id="preview-btn">Preview</button>
+          <div class="preview-result" id="preview-result"></div>
+        </div>
+      </div>
+
+      <div class="overlay-pane">
+        <h2>Image</h2>
+        <div class="image-drop" id="image-drop">
+          <div class="image-drop-prompt">Drop image here or click to choose</div>
+          <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          <div class="image-preview" id="image-preview" hidden></div>
+        </div>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea name="notes" id="ns-notes" rows="6"></textarea>
+        </label>
+
+        <div class="overlay-error error hidden" id="overlay-error"></div>
+        <button type="button" class="primary big-save" id="save-specimen-btn">Save Specimen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="detail-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div class="version-tag" id="version-tag">v—</div>
+
+  <script src="{{ url_for('static', filename='animation.js') }}"></script>
+  <script src="{{ url_for('static', filename='calculator.js') }}"></script>
+  <script src="{{ url_for('static', filename='experiments.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+clep.db
+__pycache__/
+*.pyc
+static/uploads/experiments/
+.env
