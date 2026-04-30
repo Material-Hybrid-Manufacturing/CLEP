@@ -49,7 +49,44 @@
     if (forLine) forLine.style.display = "none";
   }, T.FADE_REST + 600);
 
-  setTimeout(() => stack.classList.add("condensed"), T.CONDENSE);
+  function measureBrandRect() {
+    if (!header) return null;
+    const wasHidden = header.classList.contains("hidden-on-boot");
+    const prevVis = header.style.visibility;
+    const prevOp = header.style.opacity;
+    header.classList.remove("hidden-on-boot");
+    header.style.visibility = "hidden";
+    header.style.opacity = "0";
+    const brand = header.querySelector(".brand");
+    const rect = brand ? brand.getBoundingClientRect() : null;
+    header.style.visibility = prevVis;
+    header.style.opacity = prevOp;
+    if (wasHidden) header.classList.add("hidden-on-boot");
+    return rect;
+  }
+
+  function measureCondensedStackRect() {
+    const savedTransition = stack.style.transition;
+    stack.style.transition = "none";
+    stack.classList.add("condensed");
+    void stack.offsetHeight;
+    const rect = stack.getBoundingClientRect();
+    stack.classList.remove("condensed");
+    void stack.offsetHeight;
+    stack.style.transition = savedTransition;
+    return rect;
+  }
+
+  setTimeout(() => {
+    const brandRect = measureBrandRect();
+    if (brandRect) {
+      const condensedRect = measureCondensedStackRect();
+      const tx = brandRect.left - condensedRect.left;
+      const ty = brandRect.top - condensedRect.top;
+      stack.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
+    stack.classList.add("condensed");
+  }, T.CONDENSE);
 
   setTimeout(() => {
     header.classList.remove("hidden-on-boot");
