@@ -685,7 +685,7 @@
 
   function renderDetailHtml(row) {
     const imgStyle = row.image_path
-      ? `background-image: url("${row.image_path}")`
+      ? `background-image: url('${row.image_path}')`
       : "";
     const placeholder = row.image_path ? "" : " placeholder";
     const flu = row.fluence != null ? `${fmt(row.fluence, 2)} J/mm²` : "—";
