@@ -242,6 +242,7 @@
     out.wz.textContent = "—";
     out.spot.textContent = "—";
     out.dof.textContent = "—";
+    recomputeFluence();
   }
 
   async function runCalculation() {
@@ -283,6 +284,7 @@
       out.wz.textContent = fmt(data.wz_um, 2);
       out.spot.textContent = fmt(data.spot_diameter_um, 2);
       out.dof.textContent = fmt(data.depth_of_focus_mm, 3);
+      recomputeFluence();
       if (data.mismatch_warning) {
         out.mismatch.textContent = data.mismatch_warning;
         out.mismatch.classList.remove("hidden");
@@ -295,6 +297,81 @@
       out.err.classList.remove("hidden");
     }
   }
+
+  // ============================================================
+  // Fluence / VED calculator panel
+  // ============================================================
+  function fmtNum(n, digits) {
+    if (n === null || n === undefined || !isFinite(n)) return "—";
+    if (Math.abs(n) >= 1000) return Number(n).toFixed(0);
+    return Number(n).toFixed(digits);
+  }
+
+  function getSpotDiameterUm() {
+    const txt = (document.getElementById("out-spot")?.textContent || "").trim();
+    const n = Number(txt);
+    return txt && txt !== "—" && isFinite(n) && n > 0 ? n : null;
+  }
+
+  function recomputeFluence() {
+    const power = Number(document.getElementById("fl-power").value);
+    const speed = Number(document.getElementById("fl-speed").value);
+    const hatchUm = Number(document.getElementById("fl-hatch").value);
+    const layerUm = Number(document.getElementById("fl-layer").value);
+    const spotUm = getSpotDiameterUm();
+
+    const flOut = document.getElementById("fl-out-fluence");
+    const vedOut = document.getElementById("fl-out-ved");
+    const hint = document.getElementById("fl-spot-hint");
+    const err = document.getElementById("fl-error");
+    err.classList.add("hidden");
+
+    hint.textContent = spotUm
+      ? `Using Spot Diameter from above: ${fmtNum(spotUm, 2)} µm`
+      : "Run the calculator above to set Spot Diameter — fluence requires it.";
+
+    if (!isFinite(power) || power <= 0 || !isFinite(speed) || speed <= 0) {
+      flOut.textContent = "—";
+      vedOut.textContent = "—";
+      return;
+    }
+
+    if (spotUm) {
+      const spotRadiusMm = (spotUm / 1000) / 2;
+      const fluence = power / (speed * Math.PI * spotRadiusMm * spotRadiusMm);
+      flOut.textContent = fmtNum(fluence, 2);
+    } else {
+      flOut.textContent = "—";
+    }
+
+    if (isFinite(hatchUm) && hatchUm > 0 && isFinite(layerUm) && layerUm > 0) {
+      const hatchMm = hatchUm / 1000;
+      const layerMm = layerUm / 1000;
+      const ved = power / (speed * hatchMm * layerMm);
+      vedOut.textContent = fmtNum(ved, 1);
+    } else {
+      vedOut.textContent = "—";
+    }
+  }
+
+  document.querySelectorAll(".fluence-panel input").forEach((inp) => {
+    inp.addEventListener("input", recomputeFluence);
+  });
+  document.querySelectorAll(".fluence-panel .nudge-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const field = btn.closest(".nudge-field");
+      const input = field.querySelector("input");
+      const step = Number(field.dataset.step) || Number(input.step) || 1;
+      const dir = Number(btn.dataset.dir) || 1;
+      const cur = Number(input.value);
+      const next = (isFinite(cur) ? cur : 0) + dir * step;
+      const min = input.min !== "" ? Number(input.min) : -Infinity;
+      input.value = Math.max(min, next);
+      recomputeFluence();
+    });
+  });
+  // Initial render
+  recomputeFluence();
 
   // ============================================================
   // Version tag

@@ -122,9 +122,56 @@
         </div>
       </div>
 
-      <div class="stub-panel" aria-disabled="true">
-        <h3>Energy Density / Fluence — Coming Soon</h3>
-        <div class="stub-row">Inputs for pulse energy and repetition rate will appear here.</div>
+      <div class="card fluence-panel">
+        <h2>Energy Density &amp; Fluence</h2>
+        <div class="fluence-grid">
+          <div class="fluence-inputs">
+            <div class="nudge-field" data-step="0.5">
+              <span class="nudge-label">Power (W)</span>
+              <div class="nudge-row">
+                <button type="button" class="nudge-btn" data-dir="-1">◀</button>
+                <input type="number" id="fl-power" step="0.5" min="0" value="10">
+                <button type="button" class="nudge-btn" data-dir="1">▶</button>
+              </div>
+            </div>
+            <div class="nudge-field" data-step="50">
+              <span class="nudge-label">Scan Speed (mm/s)</span>
+              <div class="nudge-row">
+                <button type="button" class="nudge-btn" data-dir="-1">◀</button>
+                <input type="number" id="fl-speed" step="50" min="0" value="500">
+                <button type="button" class="nudge-btn" data-dir="1">▶</button>
+              </div>
+            </div>
+            <div class="nudge-field" data-step="5">
+              <span class="nudge-label">Hatch Distance (µm)</span>
+              <div class="nudge-row">
+                <button type="button" class="nudge-btn" data-dir="-1">◀</button>
+                <input type="number" id="fl-hatch" step="5" min="0" value="50">
+                <button type="button" class="nudge-btn" data-dir="1">▶</button>
+              </div>
+            </div>
+            <div class="nudge-field" data-step="5">
+              <span class="nudge-label">Layer Thickness (µm)</span>
+              <div class="nudge-row">
+                <button type="button" class="nudge-btn" data-dir="-1">◀</button>
+                <input type="number" id="fl-layer" step="5" min="0" value="30">
+                <button type="button" class="nudge-btn" data-dir="1">▶</button>
+              </div>
+            </div>
+            <div class="hint italic" id="fl-spot-hint">Using Spot Diameter from above: — µm</div>
+          </div>
+          <div class="fluence-outputs">
+            <div class="output">
+              <div class="output-label">Fluence</div>
+              <div class="output-value"><span id="fl-out-fluence">—</span> J/mm²</div>
+            </div>
+            <div class="output">
+              <div class="output-label">Volumetric Energy Density</div>
+              <div class="output-value"><span id="fl-out-ved">—</span> J/mm³</div>
+            </div>
+            <div class="error hidden" id="fl-error"></div>
+          </div>
+        </div>
       </div>
 
       <div class="stub-panel" aria-disabled="true">

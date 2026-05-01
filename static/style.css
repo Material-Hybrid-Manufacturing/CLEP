@@ -429,6 +429,73 @@ main {
 .eq-body .defs li { margin: 2px 0; }
 
 /* Stub panel */
+.fluence-panel {
+  margin-top: 16px;
+}
+
+.fluence-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .fluence-grid { grid-template-columns: 1fr; }
+}
+
+.fluence-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nudge-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nudge-label {
+  font-size: 13px;
+  color: var(--fg-soft);
+}
+
+.nudge-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.nudge-row input {
+  flex: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.nudge-btn {
+  width: 36px;
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nudge-btn:active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.fluence-outputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#fl-spot-hint {
+  margin-top: 4px;
+}
+
 .stub-panel {
   margin-top: 16px;
   border: 1px dashed var(--disabled);
