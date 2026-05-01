@@ -24,13 +24,12 @@ body { overflow-x: hidden; background: transparent; }
 
 .parallax-bg {
   position: fixed;
-  inset: -20vh 0 -20vh 0;
+  inset: 0;
   background-image: url("/static/parallax.png");
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  transform: translate3d(0, var(--parallax-y, 0px), 0);
-  will-change: transform;
+  background-size: 100% auto;
+  background-position: center var(--parallax-y, 0px);
+  background-repeat: repeat-y;
+  will-change: background-position;
   z-index: -2;
   pointer-events: none;
 }
