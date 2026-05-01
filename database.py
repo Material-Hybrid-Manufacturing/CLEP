@@ -270,6 +270,20 @@ def insert_experiment(payload):
         return dict(row)
 
 
+def update_experiment_notes(row_id, notes):
+    notes = notes if notes is None else (str(notes).strip() or None)
+    with connect() as conn:
+        cur = conn.execute(
+            "UPDATE experiments SET notes = ? WHERE id = ?", (notes, row_id)
+        )
+        if cur.rowcount == 0:
+            return None
+        row = conn.execute(
+            "SELECT * FROM experiments WHERE id = ?", (row_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
 def get_experiment(row_id):
     with connect() as conn:
         row = conn.execute(

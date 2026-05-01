@@ -202,6 +202,17 @@ def create_experiment():
     return jsonify(row), 201
 
 
+@app.route("/experiments/<int:row_id>", methods=["PATCH"])
+def update_experiment_route(row_id):
+    payload = request.get_json(silent=True) or {}
+    if "notes" not in payload:
+        return jsonify({"error": "no editable fields supplied"}), 400
+    row = database.update_experiment_notes(row_id, payload.get("notes"))
+    if row is None:
+        return jsonify({"error": "experiment not found"}), 404
+    return jsonify(row)
+
+
 @app.route("/experiments/preview", methods=["POST"])
 def preview_experiment():
     payload = request.get_json(silent=True) or {}

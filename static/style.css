@@ -983,6 +983,41 @@ button.primary:hover:not(:disabled) {
   background: var(--bg-deep);
 }
 
+.modal-notes-edit {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.modal-notes-edit:focus {
+  outline: none;
+  border-color: var(--fg);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.modal-notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal-notes-status {
+  font-size: 12px;
+  color: var(--fg-soft);
+}
+
+.modal-notes-status.error-text {
+  color: var(--fg);
+}
+
 /* ---------------------------------------------------------------------------
    Substrate Templates
    --------------------------------------------------------------------------- */

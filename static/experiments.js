@@ -456,6 +456,37 @@
     modalBody.innerHTML = renderDetailHtml(row);
     modal.hidden = false;
     document.body.style.overflow = "hidden";
+    const saveBtn = $("edit-notes-save");
+    if (saveBtn) saveBtn.addEventListener("click", () => saveNotes(row.id));
+  }
+
+  async function saveNotes(rowId) {
+    const textarea = $("edit-notes-textarea");
+    const status = $("edit-notes-status");
+    const btn = $("edit-notes-save");
+    if (!textarea || !btn) return;
+    const notes = textarea.value;
+    btn.disabled = true;
+    status.textContent = "Saving…";
+    status.classList.remove("error-text");
+    const res = await fetch(`/experiments/${rowId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes }),
+    });
+    btn.disabled = false;
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      status.textContent = data.error || `Save failed (${res.status})`;
+      status.classList.add("error-text");
+      return;
+    }
+    const updated = await res.json();
+    const idx = state.rows.findIndex((r) => r.id === rowId);
+    if (idx !== -1) state.rows[idx] = updated;
+    renderGrid();
+    status.textContent = "Saved";
+    setTimeout(() => { if (status.textContent === "Saved") status.textContent = ""; }, 2000);
   }
 
   function closeDetail() {
@@ -510,7 +541,12 @@
         ${detailRow("Beam Expander", row.beam_expander ? "On" : "Off")}
         ${row.beam_expander && row.beam_expander_model ? detailRow("Expander Model", row.beam_expander_model) : ""}
       </div>
-      ${row.notes ? `<div class="modal-section-title">Notes</div><div class="modal-notes">${escapeHtml(row.notes)}</div>` : ""}
+      <div class="modal-section-title">Notes</div>
+      <textarea class="modal-notes-edit" id="edit-notes-textarea" rows="5">${escapeHtml(row.notes || "")}</textarea>
+      <div class="modal-notes-actions">
+        <button type="button" class="primary" id="edit-notes-save" data-id="${row.id}">Save Notes</button>
+        <span class="modal-notes-status" id="edit-notes-status"></span>
+      </div>
     `;
   }
 
