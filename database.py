@@ -47,6 +47,18 @@ SCHEMA = {
             name TEXT NOT NULL UNIQUE
         )
     """,
+    "substrate_templates": """
+        CREATE TABLE IF NOT EXISTS substrate_templates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            shape TEXT NOT NULL,
+            dim_a REAL NOT NULL,
+            dim_b REAL,
+            notes TEXT,
+            beamp_filename TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
     "experiments": """
         CREATE TABLE IF NOT EXISTS experiments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -266,6 +278,44 @@ def list_experiments(filters=None):
     with connect() as conn:
         rows = conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
+
+
+def list_substrate_templates():
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM substrate_templates ORDER BY datetime(created_at) ASC, id ASC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_substrate_template(row_id):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM substrate_templates WHERE id = ?", (row_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def insert_substrate_template(payload):
+    cols = ["name", "shape", "dim_a", "dim_b", "notes", "beamp_filename"]
+    values = [payload.get(c) for c in cols]
+    placeholders = ", ".join(["?"] * len(cols))
+    col_list = ", ".join(cols)
+    with connect() as conn:
+        cur = conn.execute(
+            f"INSERT INTO substrate_templates ({col_list}) VALUES ({placeholders})",
+            values,
+        )
+        new_id = cur.lastrowid
+        row = conn.execute(
+            "SELECT * FROM substrate_templates WHERE id = ?", (new_id,)
+        ).fetchone()
+        return dict(row)
+
+
+def delete_substrate_template(row_id):
+    with connect() as conn:
+        conn.execute("DELETE FROM substrate_templates WHERE id = ?", (row_id,))
 
 
 def filter_options():

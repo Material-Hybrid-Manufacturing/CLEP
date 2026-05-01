@@ -1,7 +1,7 @@
 import os
 import secrets
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 from werkzeug.exceptions import RequestEntityTooLarge
 
 import calculations
@@ -18,7 +18,13 @@ UPLOAD_DIR = os.path.join(
 )
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+BEAMP_UPLOAD_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "static", "uploads", "beamp"
+)
+os.makedirs(BEAMP_UPLOAD_DIR, exist_ok=True)
+
 ALLOWED_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp", "gif"}
+ALLOWED_BEAMP_EXTS = {"beamp"}
 
 database.init_db()
 
@@ -236,6 +242,106 @@ def delete_test_type_route(row_id):
 @app.route("/experiments/filter-options", methods=["GET"])
 def filter_options_route():
     return jsonify(database.filter_options())
+
+
+# ---------------------------------------------------------------------------
+# Substrate Templates
+# ---------------------------------------------------------------------------
+
+
+def _save_beamp(file_storage):
+    if file_storage is None or not file_storage.filename:
+        return None
+    original = file_storage.filename
+    if "." not in original:
+        raise ValueError("file is missing an extension")
+    ext = original.rsplit(".", 1)[1].lower()
+    if ext not in ALLOWED_BEAMP_EXTS:
+        raise ValueError(f"file extension .{ext} is not allowed (must be .beamp)")
+    new_name = f"{secrets.token_hex(16)}.{ext}"
+    file_storage.save(os.path.join(BEAMP_UPLOAD_DIR, new_name))
+    return new_name
+
+
+@app.route("/substrate-templates", methods=["GET"])
+def list_substrate_templates_route():
+    return jsonify(database.list_substrate_templates())
+
+
+@app.route("/substrate-templates", methods=["POST"])
+def create_substrate_template_route():
+    if request.mimetype and request.mimetype.startswith("multipart/"):
+        form = request.form
+    else:
+        form = request.get_json(silent=True) or {}
+
+    name = (form.get("name") or "").strip()
+    shape = (form.get("shape") or "").strip().lower()
+    if not name:
+        return jsonify({"error": "name is required"}), 400
+    if shape not in {"square", "rectangle", "circle"}:
+        return jsonify({"error": "shape must be square, rectangle, or circle"}), 400
+
+    try:
+        dim_a = float(form.get("dim_a"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "dim_a is required and must be numeric"}), 400
+    if dim_a <= 0:
+        return jsonify({"error": "dim_a must be greater than zero"}), 400
+
+    dim_b = None
+    if shape == "rectangle":
+        try:
+            dim_b = float(form.get("dim_b"))
+        except (TypeError, ValueError):
+            return jsonify({"error": "dim_b is required for rectangle"}), 400
+        if dim_b <= 0:
+            return jsonify({"error": "dim_b must be greater than zero"}), 400
+
+    notes = (form.get("notes") or "").strip() or None
+
+    beamp_filename = None
+    if "beamp" in request.files:
+        try:
+            beamp_filename = _save_beamp(request.files["beamp"])
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
+    row = database.insert_substrate_template({
+        "name": name,
+        "shape": shape,
+        "dim_a": dim_a,
+        "dim_b": dim_b,
+        "notes": notes,
+        "beamp_filename": beamp_filename,
+    })
+    return jsonify(row), 201
+
+
+@app.route("/substrate-templates/<int:row_id>/download", methods=["GET"])
+def download_substrate_template_route(row_id):
+    row = database.get_substrate_template(row_id)
+    if not row or not row.get("beamp_filename"):
+        return jsonify({"error": "no .BEAMP file attached"}), 404
+    safe_name = "".join(c for c in row["name"] if c.isalnum() or c in (" ", "-", "_")).strip() or f"template-{row_id}"
+    return send_from_directory(
+        BEAMP_UPLOAD_DIR,
+        row["beamp_filename"],
+        as_attachment=True,
+        download_name=f"{safe_name}.BEAMP",
+    )
+
+
+@app.route("/substrate-templates/<int:row_id>", methods=["DELETE"])
+def delete_substrate_template_route(row_id):
+    row = database.get_substrate_template(row_id)
+    if row and row.get("beamp_filename"):
+        try:
+            os.remove(os.path.join(BEAMP_UPLOAD_DIR, row["beamp_filename"]))
+        except FileNotFoundError:
+            pass
+    database.delete_substrate_template(row_id)
+    return ("", 204)
 
 
 if __name__ == "__main__":

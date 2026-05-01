@@ -982,3 +982,146 @@ button.primary:hover:not(:disabled) {
   padding: 10px 12px;
   background: var(--bg-deep);
 }
+
+/* ---------------------------------------------------------------------------
+   Substrate Templates
+   --------------------------------------------------------------------------- */
+
+.st-form-panel {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.st-form-panel h3 {
+  grid-column: 1 / -1;
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.st-shape-fields {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.st-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.st-form-panel .error {
+  grid-column: 1 / -1;
+}
+
+.st-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 900px) {
+  .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.st-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.st-card:hover {
+  border-color: var(--fg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.st-card h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.st-shape-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.st-shape-preview svg {
+  max-width: 80%;
+  max-height: 80%;
+  display: block;
+}
+
+.st-shape-preview svg .outline {
+  stroke: var(--fg);
+  fill: none;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.st-dims {
+  font-size: 13px;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  font-weight: 600;
+}
+
+.st-notes {
+  font-size: 12px;
+  color: var(--fg-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.st-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.st-actions button {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.st-actions button:disabled {
+  color: var(--disabled);
+  border-color: var(--disabled);
+  cursor: not-allowed;
+}
+
+.st-actions button:disabled:hover {
+  background: transparent;
+  color: var(--disabled);
+}
+
+.st-empty {
+  text-align: center;
+  color: var(--fg-soft);
+  padding: 32px;
+  font-style: italic;
+}
