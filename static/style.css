@@ -22,6 +22,37 @@ html, body {
 html { background: var(--bg); overscroll-behavior-y: none; }
 body { overflow-x: hidden; background: transparent; overscroll-behavior-y: none; }
 
+#reload-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+#reload-splash.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#reload-splash .reload-splash-logo {
+  width: clamp(160px, 28vw, 360px);
+  height: auto;
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+#reload-splash.show .reload-splash-logo {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .parallax-bg {
   position: fixed;
   inset: 0;
