@@ -8,6 +8,9 @@
 </head>
 <body>
 
+  <div class="parallax-bg" aria-hidden="true"></div>
+  <div class="parallax-overlay" aria-hidden="true"></div>
+
   <div id="boot" aria-hidden="true">
     <div id="boot-stack" class="boot-stack">
       <div class="boot-line" data-line="C"><span class="ch first">C</span><span class="rest">alculator</span></div>
@@ -461,6 +464,7 @@
 
   <div class="version-tag" id="version-tag">v—</div>
 
+  <script src="{{ url_for('static', filename='parallax.js') }}"></script>
   <script src="{{ url_for('static', filename='animation.js') }}"></script>
   <script src="{{ url_for('static', filename='calculator.js') }}"></script>
   <script src="{{ url_for('static', filename='experiments.js') }}"></script>
