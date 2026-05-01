@@ -187,6 +187,14 @@
     if (target) target.classList.remove("hidden");
   }
 
+  function syncBeampClearVisibility() {
+    const input = $("st-beamp");
+    const btn = $("st-beamp-clear");
+    if (!input || !btn) return;
+    const hasFile = input.files && input.files.length > 0;
+    btn.classList.toggle("hidden", !hasFile);
+  }
+
   function resetForm() {
     $("st-name").value = "";
     if (state.shapeTypes.length > 0) {
@@ -201,6 +209,7 @@
     $("st-custom-b").value = "";
     $("st-notes").value = "";
     $("st-beamp").value = "";
+    syncBeampClearVisibility();
     $("st-error").classList.add("hidden");
     $("st-error").textContent = "";
     $("st-shape-manager").classList.add("hidden");
@@ -322,6 +331,11 @@
     $("st-cancel-btn").addEventListener("click", closeForm);
     $("st-save-btn").addEventListener("click", saveTemplate);
     $("st-shape").addEventListener("change", (e) => showShapeFields(e.target.value));
+    $("st-beamp").addEventListener("change", syncBeampClearVisibility);
+    $("st-beamp-clear").addEventListener("click", () => {
+      $("st-beamp").value = "";
+      syncBeampClearVisibility();
+    });
 
     $("st-shape-gear").addEventListener("click", () => {
       $("st-shape-manager").classList.toggle("hidden");

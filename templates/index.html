@@ -333,7 +333,10 @@
         <label class="field"><span>Notes</span><textarea id="st-notes" rows="3"></textarea></label>
         <label class="field">
           <span>.BEAMP File (optional)</span>
-          <input type="file" id="st-beamp" accept=".beamp,.BEAMP">
+          <div class="st-beamp-row">
+            <input type="file" id="st-beamp" accept=".beamp,.BEAMP">
+            <button type="button" id="st-beamp-clear" class="hidden" title="Remove attached file">×</button>
+          </div>
         </label>
         <div class="st-form-actions">
           <button type="button" class="primary" id="st-save-btn">Save</button>

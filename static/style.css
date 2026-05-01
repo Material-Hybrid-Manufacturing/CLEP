@@ -1331,6 +1331,26 @@ button.primary:hover:not(:disabled) {
   font-style: italic;
 }
 
+.st-beamp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-beamp-row input[type="file"] {
+  flex: 1;
+  min-width: 0;
+}
+
+#st-beamp-clear {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
 /* ---------------------------------------------------------------------------
    Calculator subsection panels — dark brushed metal
    --------------------------------------------------------------------------- */
