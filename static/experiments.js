@@ -331,6 +331,18 @@
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
     fetchEquipment();
+    prefillSpotFromCalculator();
+  }
+
+  function prefillSpotFromCalculator() {
+    const calcOut = document.getElementById("out-spot");
+    const target = $("ns-spot");
+    if (!calcOut || !target) return;
+    const raw = (calcOut.textContent || "").trim();
+    const n = Number(raw);
+    if (raw && raw !== "—" && isFinite(n)) {
+      target.value = n;
+    }
   }
 
   function closeOverlay() {
