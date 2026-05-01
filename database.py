@@ -363,8 +363,6 @@ def delete_substrate_shape_type(row_id):
         ).fetchone()
         if row is None:
             return False
-        if row["builtin"]:
-            raise ValueError("built-in shape types cannot be deleted")
         in_use = conn.execute(
             "SELECT COUNT(*) FROM substrate_templates WHERE shape = ?", (row["name"],)
         ).fetchone()[0]

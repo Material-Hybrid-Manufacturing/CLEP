@@ -154,25 +154,22 @@
       const row = document.createElement("div");
       row.className = "row";
       const span = document.createElement("span");
-      span.textContent = shapeLabel(t.name) + (t.builtin ? " (built-in)" : "");
-      row.appendChild(span);
-      if (!t.builtin) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.textContent = "×";
-        btn.title = "Delete";
-        btn.addEventListener("click", async () => {
-          if (!confirm(`Delete shape type "${shapeLabel(t.name)}"?`)) return;
-          const res = await fetch(`/substrate-templates/shape-types/${t.id}`, { method: "DELETE" });
-          if (!res.ok && res.status !== 204) {
-            const data = await res.json().catch(() => ({}));
-            alert(data.error || "Delete failed");
-            return;
-          }
-          await fetchShapeTypes();
-        });
-        row.appendChild(btn);
-      }
+      span.textContent = shapeLabel(t.name);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "×";
+      btn.title = "Delete";
+      btn.addEventListener("click", async () => {
+        if (!confirm(`Delete shape type "${shapeLabel(t.name)}"?`)) return;
+        const res = await fetch(`/substrate-templates/shape-types/${t.id}`, { method: "DELETE" });
+        if (!res.ok && res.status !== 204) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || "Delete failed");
+          return;
+        }
+        await fetchShapeTypes();
+      });
+      row.append(span, btn);
       list.appendChild(row);
     });
   }
