@@ -603,6 +603,13 @@
     document.body.style.overflow = "hidden";
     const saveBtn = $("edit-notes-save");
     if (saveBtn) saveBtn.addEventListener("click", () => saveNotes(row.id));
+    const editBtn = $("modal-edit-btn");
+    if (editBtn) editBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeDetail();
+      openEditOverlay(row);
+    });
   }
 
   async function saveNotes(rowId) {
@@ -671,6 +678,7 @@
       <h2>${escapeHtml(row.specimen_label || "(unlabeled)")}</h2>
       <div class="exp-image modal-image${placeholder}" style="${imgStyle}">
         ${row.test_type ? `<span class="exp-badge">${escapeHtml(row.test_type)}</span>` : ""}
+        <button type="button" class="exp-edit-btn" id="modal-edit-btn">Edit</button>
       </div>
       <div class="modal-metrics">
         <div class="modal-metric"><div class="label">Fluence</div><div class="value">${flu}</div></div>
