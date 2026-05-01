@@ -431,6 +431,8 @@ main {
 /* Stub panel */
 .fluence-panel {
   margin-top: 16px;
+  background: #bd1f17;
+  border-color: #bd1f17;
 }
 
 .fluence-grid {
@@ -490,11 +492,6 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.fluence-outputs .output {
-  background: #bd1f17;
-  border-color: #bd1f17;
 }
 
 #fl-spot-hint {
