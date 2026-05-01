@@ -610,6 +610,23 @@
       closeDetail();
       openEditOverlay(row);
     });
+    const delBtn = $("modal-delete-btn");
+    if (delBtn) delBtn.addEventListener("click", () => deleteSpecimen(row));
+  }
+
+  async function deleteSpecimen(row) {
+    const label = row.specimen_label || `#${row.id}`;
+    if (!confirm(`Delete specimen "${label}"? This cannot be undone.`)) return;
+    const res = await fetch(`/experiments/${row.id}`, { method: "DELETE" });
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || `Delete failed (${res.status})`);
+      return;
+    }
+    state.rows = state.rows.filter((r) => r.id !== row.id);
+    renderGrid();
+    closeDetail();
+    fetchOptions();
   }
 
   async function saveNotes(rowId) {
@@ -708,6 +725,9 @@
       <div class="modal-notes-actions">
         <button type="button" class="primary" id="edit-notes-save" data-id="${row.id}">Save Notes</button>
         <span class="modal-notes-status" id="edit-notes-status"></span>
+      </div>
+      <div class="modal-danger-actions">
+        <button type="button" class="modal-delete-btn" id="modal-delete-btn">Delete Specimen</button>
       </div>
     `;
   }

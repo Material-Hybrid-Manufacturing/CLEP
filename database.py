@@ -296,6 +296,17 @@ def update_experiment(row_id, payload):
         return dict(row) if row else None
 
 
+def delete_experiment(row_id):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT image_path FROM experiments WHERE id = ?", (row_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        conn.execute("DELETE FROM experiments WHERE id = ?", (row_id,))
+        return dict(row)
+
+
 def update_experiment_notes(row_id, notes):
     notes = notes if notes is None else (str(notes).strip() or None)
     with connect() as conn:

@@ -1167,6 +1167,27 @@ button.primary:hover:not(:disabled) {
   color: var(--fg);
 }
 
+.modal-danger-actions {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modal-delete-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  border-color: var(--fg-soft);
+  color: var(--fg-soft);
+}
+
+.modal-delete-btn:hover:not(:disabled) {
+  background: #bd1f17;
+  color: var(--fg);
+  border-color: #bd1f17;
+}
+
 /* ---------------------------------------------------------------------------
    Substrate Templates
    --------------------------------------------------------------------------- */

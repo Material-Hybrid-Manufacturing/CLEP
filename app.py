@@ -214,6 +214,21 @@ def update_experiment_route(row_id):
     return jsonify(row)
 
 
+@app.route("/experiments/<int:row_id>", methods=["DELETE"])
+def delete_experiment_route(row_id):
+    row = database.delete_experiment(row_id)
+    if row is None:
+        return jsonify({"error": "experiment not found"}), 404
+    image_path = row.get("image_path")
+    if image_path:
+        name = image_path.rsplit("/", 1)[-1]
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, name))
+        except FileNotFoundError:
+            pass
+    return ("", 204)
+
+
 @app.route("/experiments/<int:row_id>/update", methods=["POST", "PUT"])
 def update_experiment_full_route(row_id):
     if request.mimetype and request.mimetype.startswith("multipart/"):
