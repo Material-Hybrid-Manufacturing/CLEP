@@ -492,6 +492,11 @@ main {
   gap: 12px;
 }
 
+.fluence-outputs .output {
+  background: #bd1f17;
+  border-color: #bd1f17;
+}
+
 #fl-spot-hint {
   margin-top: 4px;
 }
