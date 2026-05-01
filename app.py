@@ -202,7 +202,8 @@ def create_experiment():
     return jsonify(row), 201
 
 
-@app.route("/experiments/<int:row_id>", methods=["PATCH"])
+@app.route("/experiments/<int:row_id>", methods=["PATCH", "POST"])
+@app.route("/experiments/<int:row_id>/notes", methods=["POST"])
 def update_experiment_route(row_id):
     payload = request.get_json(silent=True) or {}
     if "notes" not in payload:

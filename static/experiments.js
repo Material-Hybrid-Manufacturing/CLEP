@@ -465,18 +465,27 @@
     const status = $("edit-notes-status");
     const btn = $("edit-notes-save");
     if (!textarea || !btn) return;
+    if (rowId === undefined || rowId === null) {
+      status.textContent = "Save failed: missing row id";
+      status.classList.add("error-text");
+      console.error("saveNotes: missing rowId", rowId);
+      return;
+    }
     const notes = textarea.value;
     btn.disabled = true;
     status.textContent = "Saving…";
     status.classList.remove("error-text");
-    const res = await fetch(`/experiments/${rowId}`, {
-      method: "PATCH",
+    const url = `/experiments/${rowId}/notes`;
+    console.log("saveNotes POST", url, { notes });
+    const res = await fetch(url, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes }),
     });
     btn.disabled = false;
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
+      console.error("saveNotes failed", res.status, data);
       status.textContent = data.error || `Save failed (${res.status})`;
       status.classList.add("error-text");
       return;
