@@ -4,6 +4,7 @@
   const state = {
     types: [],
     options: { galvo_scanners: [], f_theta_lenses: [], laser_diodes: [] },
+    equipment: { galvo: [], lens: [] },
     rows: [],
     expanderOn: false,
     selectedImage: null,
@@ -44,6 +45,46 @@
     renderTestTypeSelect();
     renderTypeManager();
     renderFilterCheckboxes("filter-test-types", state.types.map((t) => t.name));
+  }
+
+  function equipmentLabel(row) {
+    const mfr = (row.manufacturer || "").trim();
+    const model = (row.model_number || "").trim();
+    if (mfr && model) return `${mfr} ${model}`;
+    return mfr || model || `#${row.id}`;
+  }
+
+  function populateEquipmentSelect(selectId, items, placeholder) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = "";
+    const empty = document.createElement("option");
+    empty.value = "";
+    empty.textContent = placeholder;
+    sel.appendChild(empty);
+    items.forEach((row) => {
+      const opt = document.createElement("option");
+      opt.value = equipmentLabel(row);
+      opt.textContent = equipmentLabel(row);
+      sel.appendChild(opt);
+    });
+    if (prev && Array.from(sel.options).some((o) => o.value === prev)) {
+      sel.value = prev;
+    } else {
+      sel.value = "";
+    }
+  }
+
+  async function fetchEquipment() {
+    const [galvo, lens] = await Promise.all([
+      fetch("/equipment/galvo").then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      fetch("/equipment/lens").then((r) => (r.ok ? r.json() : [])).catch(() => []),
+    ]);
+    state.equipment.galvo = galvo;
+    state.equipment.lens = lens;
+    populateEquipmentSelect("ns-galvo", galvo, "— Select Galvo Scanner —");
+    populateEquipmentSelect("ns-lens", lens, "— Select F-Theta Lens —");
   }
 
   async function fetchOptions() {
@@ -289,6 +330,7 @@
     $("preview-result").innerHTML = "";
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
+    fetchEquipment();
   }
 
   function closeOverlay() {
@@ -575,6 +617,7 @@
     btn.addEventListener("click", () => {
       fetchTypes();
       fetchOptions();
+      fetchEquipment();
       loadExperiments({});
     });
   });
@@ -584,5 +627,6 @@
   // ============================================================
   fetchTypes();
   fetchOptions();
+  fetchEquipment();
   loadExperiments({});
 })();
