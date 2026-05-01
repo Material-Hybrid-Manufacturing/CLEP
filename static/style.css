@@ -24,33 +24,30 @@ body { overflow-x: hidden; background: transparent; overscroll-behavior-y: none;
 
 #reload-splash {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 2000;
-  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px 24px;
+  background: transparent;
   opacity: 0;
+  transform: translateY(-100%);
   pointer-events: none;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 #reload-splash.show {
   opacity: 1;
-  pointer-events: auto;
+  transform: translateY(0);
 }
 
 #reload-splash .reload-splash-logo {
-  width: clamp(160px, 28vw, 360px);
+  width: clamp(100px, 16vw, 180px);
   height: auto;
-  opacity: 0;
-  transform: scale(0.96);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-#reload-splash.show .reload-splash-logo {
-  opacity: 1;
-  transform: scale(1);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
 }
 
 .parallax-bg {
