@@ -8,6 +8,7 @@
     rows: [],
     expanderOn: false,
     selectedImage: null,
+    editingId: null,
   };
 
   // ============================================================
@@ -223,6 +224,17 @@
       img.appendChild(badge);
     }
 
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "exp-edit-btn";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openEditOverlay(row);
+    });
+    img.appendChild(editBtn);
+
     const meta = document.createElement("div");
     meta.className = "exp-meta";
 
@@ -321,17 +333,100 @@
   // ============================================================
   const overlay = $("overlay-new-specimen");
 
-  function openOverlay() {
-    overlay.hidden = false;
-    document.body.style.overflow = "hidden";
+  function syncExpanderVisual() {
+    const btn = $("ns-expander-toggle");
+    btn.classList.toggle("on", state.expanderOn);
+    btn.classList.toggle("off", !state.expanderOn);
+    btn.setAttribute("aria-pressed", String(state.expanderOn));
+    btn.querySelector(".toggle-mark").textContent = state.expanderOn ? "✓" : "✕";
+    btn.querySelector(".toggle-label").textContent = state.expanderOn ? "On" : "Off";
+    $("ns-expander-fields").classList.toggle("collapsed", !state.expanderOn);
+  }
+
+  function setOverlayMode(mode) {
+    const title = overlay.querySelector(".overlay-pane h2");
+    const saveBtn = $("save-specimen-btn");
+    if (mode === "edit") {
+      if (title) title.textContent = "Edit Specimen";
+      if (saveBtn) saveBtn.textContent = "Update Specimen";
+    } else {
+      if (title) title.textContent = "New Specimen";
+      if (saveBtn) saveBtn.textContent = "Save Specimen";
+    }
+  }
+
+  function setSelectValueWithFallback(selectId, value) {
+    const sel = $(selectId);
+    if (!sel) return;
+    if (!value) { sel.value = ""; return; }
+    const exists = Array.from(sel.options).some((o) => o.value === value);
+    if (!exists) {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = `${value} (legacy)`;
+      sel.appendChild(opt);
+    }
+    sel.value = value;
+  }
+
+  function clearSpecimenForm() {
+    ["ns-label", "ns-diode", "ns-expander-model",
+     "ns-power", "ns-speed", "ns-spot", "ns-hatch", "ns-layer",
+     "ns-strategy", "ns-notes"].forEach((id) => { $(id).value = ""; });
+    $("ns-test-type").value = "";
+    $("ns-galvo").value = "";
+    $("ns-lens").value = "";
+    state.expanderOn = false;
+    syncExpanderVisual();
     state.selectedImage = null;
     $("image-preview").hidden = true;
     $("image-preview").style.backgroundImage = "";
     $("preview-result").innerHTML = "";
+  }
+
+  function openOverlay() {
+    state.editingId = null;
+    setOverlayMode("create");
+    clearSpecimenForm();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
     fetchEquipment();
     prefillSpotFromCalculator();
+  }
+
+  async function openEditOverlay(row) {
+    state.editingId = row.id;
+    setOverlayMode("edit");
+    clearSpecimenForm();
+    overlay.hidden = false;
+    document.body.style.overflow = "hidden";
+    $("overlay-error").classList.add("hidden");
+    $("type-manager").classList.add("hidden");
+
+    $("ns-label").value = row.specimen_label || "";
+    setSelectValueWithFallback("ns-test-type", row.test_type || "");
+    $("ns-diode").value = row.laser_diode || "";
+    $("ns-power").value = row.power ?? "";
+    $("ns-speed").value = row.scan_speed ?? "";
+    $("ns-spot").value = row.spot_diameter ?? "";
+    $("ns-hatch").value = row.hatch_distance ?? "";
+    $("ns-layer").value = row.layer_thickness ?? "";
+    $("ns-strategy").value = row.scan_strategy || "";
+    $("ns-notes").value = row.notes || "";
+    state.expanderOn = !!row.beam_expander;
+    syncExpanderVisual();
+    $("ns-expander-model").value = row.beam_expander_model || "";
+
+    if (row.image_path) {
+      $("image-preview").hidden = false;
+      $("image-preview").style.backgroundImage = `url("${row.image_path}")`;
+    }
+
+    await fetchEquipment();
+    setSelectValueWithFallback("ns-galvo", row.galvo_scanner || "");
+    setSelectValueWithFallback("ns-lens", row.f_theta_lens || "");
   }
 
   function prefillSpotFromCalculator() {
@@ -348,6 +443,8 @@
   function closeOverlay() {
     overlay.hidden = true;
     document.body.style.overflow = "";
+    state.editingId = null;
+    setOverlayMode("create");
   }
 
   $("new-specimen-btn").addEventListener("click", openOverlay);
@@ -363,13 +460,7 @@
   // Beam expander toggle (mirror calculator's pattern)
   $("ns-expander-toggle").addEventListener("click", () => {
     state.expanderOn = !state.expanderOn;
-    const btn = $("ns-expander-toggle");
-    btn.classList.toggle("on", state.expanderOn);
-    btn.classList.toggle("off", !state.expanderOn);
-    btn.setAttribute("aria-pressed", String(state.expanderOn));
-    btn.querySelector(".toggle-mark").textContent = state.expanderOn ? "✓" : "✕";
-    btn.querySelector(".toggle-label").textContent = state.expanderOn ? "On" : "Off";
-    $("ns-expander-fields").classList.toggle("collapsed", !state.expanderOn);
+    syncExpanderVisual();
   });
 
   // Image drop zone
@@ -474,9 +565,12 @@
     fd.append("layer_thickness", $("ns-layer").value);
     fd.append("scan_strategy", $("ns-strategy").value);
     fd.append("notes", $("ns-notes").value);
-    if (state.selectedImage) fd.append("image", state.selectedImage);
+    if (state.selectedImage && !state.editingId) fd.append("image", state.selectedImage);
 
-    const res = await fetch("/experiments", { method: "POST", body: fd });
+    const url = state.editingId
+      ? `/experiments/${state.editingId}/update`
+      : "/experiments";
+    const res = await fetch(url, { method: "POST", body: fd });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       err.textContent = data.error || `Save failed (${res.status})`;
@@ -484,18 +578,15 @@
       return;
     }
 
-    state.rows.unshift(data);
+    if (state.editingId) {
+      const idx = state.rows.findIndex((r) => r.id === state.editingId);
+      if (idx !== -1) state.rows[idx] = data;
+    } else {
+      state.rows.unshift(data);
+    }
     renderGrid();
     await fetchOptions();
-
-    // Reset form
-    ["ns-label", "ns-galvo", "ns-lens", "ns-diode", "ns-expander-model",
-     "ns-power", "ns-speed", "ns-spot", "ns-hatch", "ns-layer",
-     "ns-strategy", "ns-notes"].forEach((id) => { $(id).value = ""; });
-    state.selectedImage = null;
-    $("image-preview").hidden = true;
-    $("image-preview").style.backgroundImage = "";
-    $("preview-result").innerHTML = "";
+    clearSpecimenForm();
 
     closeOverlay();
   });

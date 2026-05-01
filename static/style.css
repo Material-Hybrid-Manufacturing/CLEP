@@ -658,6 +658,27 @@ button.primary:hover:not(:disabled) {
   position: relative;
 }
 
+.exp-edit-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 2;
+  letter-spacing: 0.02em;
+}
+
+.exp-edit-btn:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
 .exp-image.placeholder::after {
   content: "";
   position: absolute;

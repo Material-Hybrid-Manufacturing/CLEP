@@ -214,6 +214,49 @@ def update_experiment_route(row_id):
     return jsonify(row)
 
 
+@app.route("/experiments/<int:row_id>/update", methods=["POST", "PUT"])
+def update_experiment_full_route(row_id):
+    if request.mimetype and request.mimetype.startswith("multipart/"):
+        form = request.form
+    else:
+        form = request.get_json(silent=True) or {}
+
+    try:
+        power = _coerce_float(form, "power")
+        scan_speed = _coerce_float(form, "scan_speed")
+        spot_diameter = _coerce_float(form, "spot_diameter")
+        hatch_distance = _coerce_float(form, "hatch_distance")
+        layer_thickness = _coerce_float(form, "layer_thickness")
+        fluence, ved = experiments.calc_metrics(
+            power, scan_speed, spot_diameter, hatch_distance, layer_thickness
+        )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    payload = {
+        "specimen_label": (form.get("specimen_label") or "").strip() or None,
+        "test_type": (form.get("test_type") or "").strip() or None,
+        "galvo_scanner": (form.get("galvo_scanner") or "").strip() or None,
+        "f_theta_lens": (form.get("f_theta_lens") or "").strip() or None,
+        "laser_diode": (form.get("laser_diode") or "").strip() or None,
+        "beam_expander": _coerce_bool(form, "beam_expander"),
+        "beam_expander_model": (form.get("beam_expander_model") or "").strip() or None,
+        "power": power,
+        "scan_speed": scan_speed,
+        "spot_diameter": spot_diameter,
+        "hatch_distance": hatch_distance,
+        "layer_thickness": layer_thickness,
+        "scan_strategy": (form.get("scan_strategy") or "").strip() or None,
+        "fluence": fluence,
+        "ved": ved,
+        "notes": (form.get("notes") or "").strip() or None,
+    }
+    row = database.update_experiment(row_id, payload)
+    if row is None:
+        return jsonify({"error": "experiment not found"}), 404
+    return jsonify(row)
+
+
 @app.route("/experiments/preview", methods=["POST"])
 def preview_experiment():
     payload = request.get_json(silent=True) or {}

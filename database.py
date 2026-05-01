@@ -270,6 +270,32 @@ def insert_experiment(payload):
         return dict(row)
 
 
+EXPERIMENT_EDITABLE_FIELDS = [
+    "specimen_label", "test_type", "galvo_scanner", "f_theta_lens",
+    "laser_diode", "beam_expander", "beam_expander_model", "power",
+    "scan_speed", "spot_diameter", "hatch_distance", "layer_thickness",
+    "scan_strategy", "fluence", "ved", "notes",
+]
+
+
+def update_experiment(row_id, payload):
+    cols = [c for c in EXPERIMENT_EDITABLE_FIELDS if c in payload]
+    if not cols:
+        return None
+    values = [payload[c] for c in cols] + [row_id]
+    set_sql = ", ".join(f"{c} = ?" for c in cols)
+    with connect() as conn:
+        cur = conn.execute(
+            f"UPDATE experiments SET {set_sql} WHERE id = ?", values
+        )
+        if cur.rowcount == 0:
+            return None
+        row = conn.execute(
+            "SELECT * FROM experiments WHERE id = ?", (row_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
 def update_experiment_notes(row_id, notes):
     notes = notes if notes is None else (str(notes).strip() or None)
     with connect() as conn:
