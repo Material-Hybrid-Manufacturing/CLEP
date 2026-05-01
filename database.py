@@ -274,7 +274,7 @@ EXPERIMENT_EDITABLE_FIELDS = [
     "specimen_label", "test_type", "galvo_scanner", "f_theta_lens",
     "laser_diode", "beam_expander", "beam_expander_model", "power",
     "scan_speed", "spot_diameter", "hatch_distance", "layer_thickness",
-    "scan_strategy", "fluence", "ved", "notes",
+    "scan_strategy", "fluence", "ved", "notes", "image_path",
 ]
 
 

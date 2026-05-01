@@ -248,6 +248,18 @@ def update_experiment_full_route(row_id):
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+    new_image_path = None
+    old_image_path = None
+    if "image" in request.files and request.files["image"].filename:
+        existing = database.get_experiment(row_id)
+        if existing is None:
+            return jsonify({"error": "experiment not found"}), 404
+        old_image_path = existing.get("image_path")
+        try:
+            new_image_path = _save_image(request.files["image"])
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
     payload = {
         "specimen_label": (form.get("specimen_label") or "").strip() or None,
         "test_type": (form.get("test_type") or "").strip() or None,
@@ -266,9 +278,24 @@ def update_experiment_full_route(row_id):
         "ved": ved,
         "notes": (form.get("notes") or "").strip() or None,
     }
+    if new_image_path:
+        payload["image_path"] = new_image_path
+
     row = database.update_experiment(row_id, payload)
     if row is None:
+        if new_image_path:
+            try:
+                os.remove(os.path.join(UPLOAD_DIR, new_image_path.rsplit("/", 1)[-1]))
+            except FileNotFoundError:
+                pass
         return jsonify({"error": "experiment not found"}), 404
+
+    if new_image_path and old_image_path:
+        try:
+            os.remove(os.path.join(UPLOAD_DIR, old_image_path.rsplit("/", 1)[-1]))
+        except FileNotFoundError:
+            pass
+
     return jsonify(row)
 
 

@@ -565,7 +565,7 @@
     fd.append("layer_thickness", $("ns-layer").value);
     fd.append("scan_strategy", $("ns-strategy").value);
     fd.append("notes", $("ns-notes").value);
-    if (state.selectedImage && !state.editingId) fd.append("image", state.selectedImage);
+    if (state.selectedImage) fd.append("image", state.selectedImage);
 
     const url = state.editingId
       ? `/experiments/${state.editingId}/update`
