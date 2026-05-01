@@ -432,7 +432,7 @@ main {
 .fluence-panel {
   margin-top: 16px;
   background: #bd1f17;
-  border-color: #bd1f17;
+  border-color: var(--fg);
 }
 
 .fluence-grid {
