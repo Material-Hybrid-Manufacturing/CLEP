@@ -250,13 +250,23 @@
         <label class="field"><span>Name</span><input type="text" id="st-name" required></label>
         <label class="field">
           <span>Shape</span>
-          <select id="st-shape">
-            <option value="square">Square</option>
-            <option value="rectangle">Rectangle</option>
-            <option value="circle">Circle</option>
-          </select>
+          <div class="select-with-gear">
+            <select id="st-shape"></select>
+            <button type="button" class="gear-btn" id="st-shape-gear" aria-label="Manage shape types" title="Manage shape types">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+          </div>
         </label>
-        <div class="st-shape-fields" id="st-fields-square">
+
+        <div class="type-manager hidden" id="st-shape-manager">
+          <div class="type-manager-list" id="st-shape-manager-list"></div>
+          <div class="type-manager-add">
+            <input type="text" id="st-new-shape-input" placeholder="New shape type (e.g. hexagon)">
+            <button type="button" id="st-add-shape-btn">Add</button>
+          </div>
+        </div>
+
+        <div class="st-shape-fields hidden" id="st-fields-square">
           <label class="field"><span>Side Length (mm)</span><input type="number" step="0.01" min="0" id="st-side"></label>
         </div>
         <div class="st-shape-fields hidden" id="st-fields-rectangle">
@@ -265,6 +275,10 @@
         </div>
         <div class="st-shape-fields hidden" id="st-fields-circle">
           <label class="field"><span>Radius (mm)</span><input type="number" step="0.01" min="0" id="st-radius"></label>
+        </div>
+        <div class="st-shape-fields hidden" id="st-fields-custom">
+          <label class="field"><span>Primary Dimension (mm)</span><input type="number" step="0.01" min="0" id="st-custom-a"></label>
+          <label class="field"><span>Secondary Dimension (mm, optional)</span><input type="number" step="0.01" min="0" id="st-custom-b"></label>
         </div>
         <label class="field"><span>Notes</span><textarea id="st-notes" rows="3"></textarea></label>
         <label class="field">

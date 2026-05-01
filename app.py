@@ -279,8 +279,8 @@ def create_substrate_template_route():
     shape = (form.get("shape") or "").strip().lower()
     if not name:
         return jsonify({"error": "name is required"}), 400
-    if shape not in {"square", "rectangle", "circle"}:
-        return jsonify({"error": "shape must be square, rectangle, or circle"}), 400
+    if shape not in database.shape_type_names():
+        return jsonify({"error": f"unknown shape type: {shape}"}), 400
 
     try:
         dim_a = float(form.get("dim_a"))
@@ -290,11 +290,19 @@ def create_substrate_template_route():
         return jsonify({"error": "dim_a must be greater than zero"}), 400
 
     dim_b = None
+    raw_dim_b = form.get("dim_b")
     if shape == "rectangle":
         try:
-            dim_b = float(form.get("dim_b"))
+            dim_b = float(raw_dim_b)
         except (TypeError, ValueError):
             return jsonify({"error": "dim_b is required for rectangle"}), 400
+        if dim_b <= 0:
+            return jsonify({"error": "dim_b must be greater than zero"}), 400
+    elif raw_dim_b not in (None, ""):
+        try:
+            dim_b = float(raw_dim_b)
+        except (TypeError, ValueError):
+            return jsonify({"error": "dim_b must be numeric"}), 400
         if dim_b <= 0:
             return jsonify({"error": "dim_b must be greater than zero"}), 400
 
@@ -316,6 +324,35 @@ def create_substrate_template_route():
         "beamp_filename": beamp_filename,
     })
     return jsonify(row), 201
+
+
+@app.route("/substrate-templates/shape-types", methods=["GET"])
+def list_substrate_shape_types_route():
+    return jsonify(database.list_substrate_shape_types())
+
+
+@app.route("/substrate-templates/shape-types", methods=["POST"])
+def add_substrate_shape_type_route():
+    payload = request.get_json(silent=True) or {}
+    raw = (payload.get("name") or "").strip().lower()
+    if not raw:
+        return jsonify({"error": "name is required"}), 400
+    try:
+        row = database.insert_substrate_shape_type(raw)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify(row), 201
+
+
+@app.route("/substrate-templates/shape-types/<int:row_id>", methods=["DELETE"])
+def delete_substrate_shape_type_route(row_id):
+    try:
+        ok = database.delete_substrate_shape_type(row_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    if not ok:
+        return jsonify({"error": "not found"}), 404
+    return ("", 204)
 
 
 @app.route("/substrate-templates/<int:row_id>/download", methods=["GET"])

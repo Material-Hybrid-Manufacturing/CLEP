@@ -47,6 +47,13 @@ SCHEMA = {
             name TEXT NOT NULL UNIQUE
         )
     """,
+    "substrate_shape_types": """
+        CREATE TABLE IF NOT EXISTS substrate_shape_types (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            builtin INTEGER NOT NULL DEFAULT 0
+        )
+    """,
     "substrate_templates": """
         CREATE TABLE IF NOT EXISTS substrate_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,6 +99,8 @@ EXPERIMENT_FIELDS = [
 ]
 
 DEFAULT_TEST_TYPES = ("Consolidation", "Geometric Accuracy", "Multilayer", "Other")
+
+BUILTIN_SHAPE_TYPES = ("square", "rectangle", "circle")
 
 KIND_TO_TABLE = {
     "galvo": "galvo_scanners",
@@ -166,6 +175,12 @@ def seed_if_empty(conn):
     for name in DEFAULT_TEST_TYPES:
         conn.execute(
             "INSERT OR IGNORE INTO experiment_test_types (name) VALUES (?)",
+            (name,),
+        )
+
+    for name in BUILTIN_SHAPE_TYPES:
+        conn.execute(
+            "INSERT OR IGNORE INTO substrate_shape_types (name, builtin) VALUES (?, 1)",
             (name,),
         )
 
@@ -316,6 +331,55 @@ def insert_substrate_template(payload):
 def delete_substrate_template(row_id):
     with connect() as conn:
         conn.execute("DELETE FROM substrate_templates WHERE id = ?", (row_id,))
+
+
+def list_substrate_shape_types():
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM substrate_shape_types ORDER BY builtin DESC, name COLLATE NOCASE ASC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def insert_substrate_shape_type(name):
+    name = (name or "").strip()
+    if not name:
+        raise ValueError("shape type name is required")
+    with connect() as conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO substrate_shape_types (name, builtin) VALUES (?, 0)",
+            (name,),
+        )
+        row = conn.execute(
+            "SELECT * FROM substrate_shape_types WHERE name = ?", (name,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def delete_substrate_shape_type(row_id):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM substrate_shape_types WHERE id = ?", (row_id,)
+        ).fetchone()
+        if row is None:
+            return False
+        if row["builtin"]:
+            raise ValueError("built-in shape types cannot be deleted")
+        in_use = conn.execute(
+            "SELECT COUNT(*) FROM substrate_templates WHERE shape = ?", (row["name"],)
+        ).fetchone()[0]
+        if in_use:
+            raise ValueError(
+                f"shape type '{row['name']}' is in use by {in_use} template(s)"
+            )
+        conn.execute("DELETE FROM substrate_shape_types WHERE id = ?", (row_id,))
+        return True
+
+
+def shape_type_names():
+    with connect() as conn:
+        rows = conn.execute("SELECT name FROM substrate_shape_types").fetchall()
+        return {r["name"] for r in rows}
 
 
 def filter_options():
