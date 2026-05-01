@@ -19,8 +19,8 @@ html, body {
   min-height: 100vh;
 }
 
-html { background: var(--bg); }
-body { overflow-x: hidden; background: transparent; }
+html { background: var(--bg); overscroll-behavior-y: none; }
+body { overflow-x: hidden; background: transparent; overscroll-behavior-y: none; }
 
 .parallax-bg {
   position: fixed;
