@@ -35,45 +35,51 @@
   update();
 
   // ============================================================
-  // Overscroll-up at top: show MATERIAL logo splash (visual-only)
+  // Overscroll-up at top: show MATERIAL logo splash (touch-only)
+  // Triggers only on a real overscroll gesture (e.g. iPad swipe-down at
+  // the very top of the page). Mouse-wheel input is ignored so a desktop
+  // user can't accidentally summon it.
   // ============================================================
-  const THRESHOLD = 240;
-  const RESET_IDLE_MS = 250;
-  let accum = 0;
-  let lastWheelAt = 0;
+  const THRESHOLD = 90;
+  let touchStartY = null;
+  let touchPulled = 0;
   let splashing = false;
 
   function triggerSplash() {
     const splash = document.getElementById("reload-splash");
     if (!splash) return;
     splashing = true;
-    accum = 0;
     splash.classList.add("show");
-    // Hold the logo on screen, then fade it out.
     setTimeout(() => splash.classList.remove("show"), 300);
-    // Re-enable detection only after the fade-out finishes.
     setTimeout(() => { splashing = false; }, 700);
   }
 
-  window.addEventListener("wheel", (e) => {
-    const now = performance.now();
-    if (splashing) {
-      e.preventDefault();
+  window.addEventListener("touchstart", (e) => {
+    if (splashing) return;
+    if (document.body.classList.contains("dialog-open")) return;
+    if (!e.touches || e.touches.length !== 1) {
+      touchStartY = null;
       return;
     }
-    if (document.body.classList.contains("dialog-open")) {
-      accum = 0;
-      return;
-    }
-    if (now - lastWheelAt > RESET_IDLE_MS) accum = 0;
-    lastWheelAt = now;
-
     const y = window.scrollY || window.pageYOffset || 0;
-    if (y <= 0 && e.deltaY < 0) {
-      accum += -e.deltaY;
-      if (accum >= THRESHOLD) triggerSplash();
-    } else if (e.deltaY >= 0) {
-      accum = 0;
+    touchStartY = y <= 0 ? e.touches[0].clientY : null;
+    touchPulled = 0;
+  }, { passive: true });
+
+  window.addEventListener("touchmove", (e) => {
+    if (splashing || touchStartY === null) return;
+    if (document.body.classList.contains("dialog-open")) return;
+    const y = window.scrollY || window.pageYOffset || 0;
+    if (y > 0) { touchStartY = null; return; }
+    touchPulled = e.touches[0].clientY - touchStartY;
+    if (touchPulled >= THRESHOLD) {
+      triggerSplash();
+      touchStartY = null;
     }
-  }, { passive: false });
+  }, { passive: true });
+
+  window.addEventListener("touchend", () => {
+    touchStartY = null;
+    touchPulled = 0;
+  }, { passive: true });
 })();
