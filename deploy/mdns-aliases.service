@@ -1,0 +1,13 @@
+[Unit]
+Description=Publish clep.local + printvault.local mDNS aliases of the Pi hostname
+After=avahi-daemon.service network-online.target
+Requires=avahi-daemon.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/avahi-publish-cname clep.local printvault.local
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
