@@ -614,15 +614,22 @@ main {
 /* Equipment */
 .eq-pane.hidden { display: none; }
 
-.eq-table {
-  width: 100%;
-  border-collapse: collapse;
+.eq-table-wrap {
   margin-bottom: 24px;
-  background: var(--bg-elev);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border: 1px solid var(--line);
   border-radius: 8px;
-  overflow: hidden;
+  background: var(--bg-elev);
 }
+
+.eq-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.eq-table th, .eq-table td { white-space: nowrap; }
 
 .eq-table th, .eq-table td {
   padding: 10px 12px;
