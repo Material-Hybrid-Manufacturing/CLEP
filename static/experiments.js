@@ -332,6 +332,15 @@
   // New specimen overlay
   // ============================================================
   const overlay = $("overlay-new-specimen");
+  let overlayParallaxPending = false;
+  function onOverlayScroll() {
+    if (overlayParallaxPending) return;
+    overlayParallaxPending = true;
+    requestAnimationFrame(() => {
+      overlayParallaxPending = false;
+      if (window.__parallax) window.__parallax.setY(overlay.scrollTop);
+    });
+  }
 
   function syncExpanderVisual() {
     const btn = $("ns-expander-toggle");
@@ -390,6 +399,9 @@
     clearSpecimenForm();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
+    overlay.scrollTop = 0;
+    overlay.addEventListener("scroll", onOverlayScroll, { passive: true });
+    if (window.__parallax) window.__parallax.setY(0);
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
     fetchEquipment();
@@ -402,6 +414,9 @@
     clearSpecimenForm();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
+    overlay.scrollTop = 0;
+    overlay.addEventListener("scroll", onOverlayScroll, { passive: true });
+    if (window.__parallax) window.__parallax.setY(0);
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
 
@@ -441,8 +456,10 @@
   }
 
   function closeOverlay() {
+    overlay.removeEventListener("scroll", onOverlayScroll);
     overlay.hidden = true;
     document.body.style.overflow = "";
+    if (window.__parallax) window.__parallax.syncToWindow();
     state.editingId = null;
     setOverlayMode("create");
   }
@@ -596,11 +613,28 @@
   // ============================================================
   const modal = $("detail-modal");
   const modalBody = $("modal-body");
+  const modalScrollEl = modal.querySelector(".modal");
+  let modalParallaxPending = false;
+  function onModalScroll() {
+    if (modalParallaxPending) return;
+    modalParallaxPending = true;
+    requestAnimationFrame(() => {
+      modalParallaxPending = false;
+      if (modalScrollEl && window.__parallax) {
+        window.__parallax.setY(modalScrollEl.scrollTop);
+      }
+    });
+  }
 
   function openDetail(row) {
     modalBody.innerHTML = renderDetailHtml(row);
     modal.hidden = false;
     document.body.style.overflow = "hidden";
+    if (modalScrollEl) {
+      modalScrollEl.scrollTop = 0;
+      modalScrollEl.addEventListener("scroll", onModalScroll, { passive: true });
+    }
+    if (window.__parallax) window.__parallax.setY(0);
     const saveBtn = $("edit-notes-save");
     if (saveBtn) saveBtn.addEventListener("click", () => saveNotes(row.id));
     const editBtn = $("modal-edit-btn");
@@ -668,8 +702,10 @@
   }
 
   function closeDetail() {
+    if (modalScrollEl) modalScrollEl.removeEventListener("scroll", onModalScroll);
     modal.hidden = true;
     document.body.style.overflow = "";
+    if (window.__parallax) window.__parallax.syncToWindow();
   }
 
   modal.addEventListener("click", (e) => {

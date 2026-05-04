@@ -9,6 +9,11 @@
     root.style.setProperty("--parallax-y", `${-(y * FACTOR).toFixed(1)}px`);
   }
 
+  function setY(y) {
+    root.style.setProperty("--parallax-y", `${-(y * FACTOR).toFixed(1)}px`);
+  }
+  window.__parallax = { setY, syncToWindow: update, FACTOR };
+
   function onScroll() {
     if (pending) return;
     pending = true;
