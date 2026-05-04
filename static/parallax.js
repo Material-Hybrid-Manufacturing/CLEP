@@ -1,5 +1,5 @@
 (function () {
-  const FACTOR = 0.4;
+  const FACTOR = 0.25;
   const root = document.documentElement;
   let pending = false;
 
