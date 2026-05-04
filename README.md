@@ -38,40 +38,40 @@ Then open `http://<pi-ip>:5000` from any device on the LAN.
 The database is auto-created and seeded on first run with one Galvo Scanner
 (Sinogalvo RC1001C-V1) and one F-Theta Lens (JG JG-SL-1064-163-110-10L).
 
-## Run on boot via systemd
+## Deploy on a Raspberry Pi (one command)
 
-Create `/etc/systemd/system/clep.service`:
-
-```ini
-[Unit]
-Description=CLEP — Calculator for Laser Experimentation Process
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=pi
-WorkingDirectory=/home/pi/clep
-ExecStart=/home/pi/clep/start.sh
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-If using a virtualenv, change `start.sh` to activate it before running
-`python3 app.py`, or set `ExecStart=/home/pi/clep/.venv/bin/python /home/pi/clep/app.py`.
-
-Enable and start:
+SSH into the Pi as `pi` and run:
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now clep
-sudo systemctl status clep
+sudo apt-get install -y git
+git clone https://github.com/Material-Hybrid-Manufacturing/CLEP.git /home/pi/clep
+cd /home/pi/clep
+chmod +x start.sh deploy/install.sh deploy/update.sh
+./deploy/install.sh
+sudo reboot
 ```
 
-View logs: `sudo journalctl -u clep -f`.
+`deploy/install.sh` is idempotent. It installs system packages, sets the
+hostname to `clep`, creates a virtualenv, installs Python deps, drops three
+systemd units in place, and enables them:
+
+| Unit | Purpose |
+|---|---|
+| `clep.service` | Runs the Flask app via the venv. `Restart=on-failure`. |
+| `clep-update.service` | Oneshot — runs `deploy/update.sh`. |
+| `clep-update.timer` | Fires `clep-update.service` 2 min after boot, then every 5 min. |
+
+`deploy/update.sh` does `git fetch + git reset --hard origin/main`, reinstalls
+deps if `requirements.txt` changed, and restarts `clep.service` only if the
+commit hash actually moved. End-to-end, `git push origin main` from your
+laptop reaches the Pi within ~5 minutes — no SSH needed for routine releases.
+
+View logs:
+
+```bash
+sudo journalctl -u clep.service -f
+sudo journalctl -u clep-update.service -n 20
+```
 
 ## Reach the app at `clep.local`
 

@@ -1,0 +1,16 @@
+[Unit]
+Description=CLEP — Calculator for Laser Experimentation Process
+After=network-online.target avahi-daemon.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/clep
+ExecStart=/home/pi/clep/.venv/bin/python /home/pi/clep/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

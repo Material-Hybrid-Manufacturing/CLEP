@@ -1,0 +1,11 @@
+[Unit]
+Description=CLEP auto-update (git fetch + restart if changed)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/clep
+ExecStart=/home/pi/clep/deploy/update.sh
