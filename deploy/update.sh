@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /home/pi/clep
+cd "$(dirname "$0")/.."
 
 before=$(git rev-parse HEAD)
 git fetch --quiet origin main

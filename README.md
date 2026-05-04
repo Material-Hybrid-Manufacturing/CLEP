@@ -40,16 +40,22 @@ The database is auto-created and seeded on first run with one Galvo Scanner
 
 ## Deploy on a Raspberry Pi (one command)
 
-SSH into the Pi as `pi` and run:
+SSH into the Pi (any user with `sudo`, any clone path — `~/clep` is fine) and
+run:
 
 ```bash
 sudo apt-get install -y git
-git clone https://github.com/Material-Hybrid-Manufacturing/CLEP.git /home/pi/clep
-cd /home/pi/clep
+git clone https://github.com/Material-Hybrid-Manufacturing/CLEP.git ~/clep
+cd ~/clep
 chmod +x start.sh deploy/install.sh deploy/update.sh
 ./deploy/install.sh
-sudo reboot
 ```
+
+`install.sh` discovers the current user, group, and clone path, and renders
+the systemd unit files from templates accordingly — no need to be the `pi`
+user or to clone into a specific directory. `clep.local` is published from
+inside the Flask app via `mdns.py`, so the Pi's hostname does not need to
+be changed.
 
 `deploy/install.sh` is idempotent. It installs system packages, sets the
 hostname to `clep`, creates a virtualenv, installs Python deps, drops three

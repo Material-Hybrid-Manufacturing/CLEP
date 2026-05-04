@@ -5,10 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-Group=pi
-WorkingDirectory=/home/pi/clep
-ExecStart=/home/pi/clep/.venv/bin/python /home/pi/clep/app.py
+User=@APP_USER@
+Group=@APP_GROUP@
+WorkingDirectory=@APP_DIR@
+ExecStart=@APP_DIR@/.venv/bin/python @APP_DIR@/app.py
 Restart=on-failure
 RestartSec=5
 
