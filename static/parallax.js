@@ -50,9 +50,9 @@
     accum = 0;
     splash.classList.add("show");
     // Hold the logo on screen, then fade it out.
-    setTimeout(() => splash.classList.remove("show"), 900);
+    setTimeout(() => splash.classList.remove("show"), 300);
     // Re-enable detection only after the fade-out finishes.
-    setTimeout(() => { splashing = false; }, 1500);
+    setTimeout(() => { splashing = false; }, 700);
   }
 
   window.addEventListener("wheel", (e) => {
