@@ -14,6 +14,15 @@
   }
   window.__parallax = { setY, syncToWindow: update, FACTOR };
 
+  function syncHeaderHeight() {
+    const h = document.getElementById("app-header");
+    if (!h) return;
+    root.style.setProperty("--app-header-h", `${h.offsetHeight}px`);
+  }
+  window.addEventListener("load", syncHeaderHeight);
+  window.addEventListener("resize", syncHeaderHeight);
+  document.addEventListener("DOMContentLoaded", syncHeaderHeight);
+
   function onScroll() {
     if (pending) return;
     pending = true;
