@@ -332,13 +332,14 @@
   // New specimen overlay
   // ============================================================
   const overlay = $("overlay-new-specimen");
+  const overlayCard = overlay.querySelector(".overlay-modal");
   let overlayParallaxPending = false;
   function onOverlayScroll() {
     if (overlayParallaxPending) return;
     overlayParallaxPending = true;
     requestAnimationFrame(() => {
       overlayParallaxPending = false;
-      if (window.__parallax) window.__parallax.setY(overlay.scrollTop);
+      if (overlayCard && window.__parallax) window.__parallax.setY(overlayCard.scrollTop);
     });
   }
 
@@ -399,8 +400,11 @@
     clearSpecimenForm();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
-    overlay.scrollTop = 0;
-    overlay.addEventListener("scroll", onOverlayScroll, { passive: true });
+    document.body.classList.add("dialog-open");
+    if (overlayCard) {
+      overlayCard.scrollTop = 0;
+      overlayCard.addEventListener("scroll", onOverlayScroll, { passive: true });
+    }
     if (window.__parallax) window.__parallax.setY(0);
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
@@ -414,8 +418,11 @@
     clearSpecimenForm();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
-    overlay.scrollTop = 0;
-    overlay.addEventListener("scroll", onOverlayScroll, { passive: true });
+    document.body.classList.add("dialog-open");
+    if (overlayCard) {
+      overlayCard.scrollTop = 0;
+      overlayCard.addEventListener("scroll", onOverlayScroll, { passive: true });
+    }
     if (window.__parallax) window.__parallax.setY(0);
     $("overlay-error").classList.add("hidden");
     $("type-manager").classList.add("hidden");
@@ -456,13 +463,18 @@
   }
 
   function closeOverlay() {
-    overlay.removeEventListener("scroll", onOverlayScroll);
+    if (overlayCard) overlayCard.removeEventListener("scroll", onOverlayScroll);
     overlay.hidden = true;
     document.body.style.overflow = "";
+    document.body.classList.remove("dialog-open");
     if (window.__parallax) window.__parallax.syncToWindow();
     state.editingId = null;
     setOverlayMode("create");
   }
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
 
   $("new-specimen-btn").addEventListener("click", openOverlay);
   $("overlay-close-btn").addEventListener("click", closeOverlay);
@@ -630,6 +642,7 @@
     modalBody.innerHTML = renderDetailHtml(row);
     modal.hidden = false;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("dialog-open");
     if (modalScrollEl) {
       modalScrollEl.scrollTop = 0;
       modalScrollEl.addEventListener("scroll", onModalScroll, { passive: true });
@@ -705,6 +718,7 @@
     if (modalScrollEl) modalScrollEl.removeEventListener("scroll", onModalScroll);
     modal.hidden = true;
     document.body.style.overflow = "";
+    document.body.classList.remove("dialog-open");
     if (window.__parallax) window.__parallax.syncToWindow();
   }
 
