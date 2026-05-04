@@ -19,8 +19,8 @@ html, body {
   min-height: 100vh;
 }
 
-html { background: var(--bg); }
-body { overflow-x: hidden; background: transparent; }
+html { background: var(--bg); overflow-x: hidden; }
+body { overflow-x: hidden; background: transparent; max-width: 100vw; }
 
 #reload-splash {
   position: fixed;
@@ -281,6 +281,30 @@ header#app-header.visible { opacity: 1; }
   font-family: Inter, system-ui, sans-serif;
 }
 
+/* Mobile header — wrap content so brand + tabs + logo all stay inside the black bar */
+@media (max-width: 720px) {
+  header#app-header {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 14px;
+    justify-content: space-between;
+  }
+  .brand { font-size: 18px; }
+  .logo { height: 28px; }
+  .logo-text { font-size: 14px; }
+  .page-tabs {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 6px;
+  }
+  .page-tab {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+}
+
 /* Hidden states */
 .hidden, .hidden-on-boot { display: none !important; }
 header#app-header.visible, main#app-main.visible { display: flex; }
@@ -291,6 +315,10 @@ main {
   padding: 28px 24px 60px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  main { padding: 16px 12px 40px; }
 }
 
 .page { display: block; }
@@ -1258,6 +1286,10 @@ body.dialog-open #app-main { visibility: hidden; }
 
 @media (max-width: 900px) {
   .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .st-grid { grid-template-columns: 1fr; }
 }
 
 .st-card {
