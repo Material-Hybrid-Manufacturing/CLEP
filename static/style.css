@@ -296,7 +296,7 @@ header#app-header.visible { opacity: 1; }
     order: 3;
     width: 100%;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     gap: 4px 6px;
   }
   .page-tab {
