@@ -927,10 +927,9 @@ body.dialog-open #app-main { visibility: hidden; }
 }
 
 .overlay-pane {
-  background: var(--bg-elev);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 20px;
+  background: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .overlay-pane h2 { margin: 0 0 14px; font-size: 18px; font-weight: 600; }
@@ -1029,6 +1028,7 @@ body.dialog-open #app-main { visibility: hidden; }
 .image-preview {
   width: 100%;
   aspect-ratio: 9 / 16;
+  max-height: 360px;
   background-size: cover;
   background-position: center;
   border-radius: 4px;

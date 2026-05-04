@@ -61,6 +61,10 @@
       e.preventDefault();
       return;
     }
+    if (document.body.classList.contains("dialog-open")) {
+      accum = 0;
+      return;
+    }
     if (now - lastWheelAt > RESET_IDLE_MS) accum = 0;
     lastWheelAt = now;
 
