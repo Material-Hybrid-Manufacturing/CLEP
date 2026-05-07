@@ -23,6 +23,7 @@ SCHEMA = {
             manufacturer TEXT NOT NULL,
             model_number TEXT NOT NULL,
             focal_length_mm REAL NOT NULL,
+            working_distance_mm REAL,
             field_size_mm REAL,
             optimized_wavelength_nm REAL NOT NULL,
             input_aperture_mm REAL NOT NULL,
@@ -115,8 +116,8 @@ FIELDS = {
         "full_optical_angle_deg", "notes",
     ],
     "ftheta_lenses": [
-        "manufacturer", "model_number", "focal_length_mm", "field_size_mm",
-        "optimized_wavelength_nm", "input_aperture_mm", "notes",
+        "manufacturer", "model_number", "focal_length_mm", "working_distance_mm",
+        "field_size_mm", "optimized_wavelength_nm", "input_aperture_mm", "notes",
     ],
     "beam_expanders": [
         "manufacturer", "model_number", "magnification",
@@ -147,7 +148,15 @@ def init_db():
     with connect() as conn:
         for ddl in SCHEMA.values():
             conn.execute(ddl)
+        _migrate(conn)
         seed_if_empty(conn)
+
+
+def _migrate(conn):
+    try:
+        conn.execute("ALTER TABLE ftheta_lenses ADD COLUMN working_distance_mm REAL")
+    except sqlite3.OperationalError:
+        pass
 
 
 def seed_if_empty(conn):
@@ -166,10 +175,10 @@ def seed_if_empty(conn):
     if lens_count == 0:
         conn.execute(
             """INSERT INTO ftheta_lenses
-               (manufacturer, model_number, focal_length_mm, field_size_mm,
-                optimized_wavelength_nm, input_aperture_mm, notes)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            ("JG", "JG-SL-1064-163-110-10L", 163.0, 110.0, 1064.0, 10.0, "Seed entry"),
+               (manufacturer, model_number, focal_length_mm, working_distance_mm,
+                field_size_mm, optimized_wavelength_nm, input_aperture_mm, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            ("JG", "JG-SL-1064-163-110-10L", 163.0, None, 110.0, 1064.0, 10.0, "Seed entry"),
         )
 
     for name in DEFAULT_TEST_TYPES:
@@ -212,6 +221,21 @@ def insert_row(kind, payload):
         new_id = cur.lastrowid
         row = conn.execute(f"SELECT * FROM {table} WHERE id = ?", (new_id,)).fetchone()
         return dict(row)
+
+
+def update_row(kind, row_id, payload):
+    table = table_for(kind)
+    cols = FIELDS[table]
+    values = [payload.get(c) for c in cols] + [row_id]
+    set_sql = ", ".join(f"{c} = ?" for c in cols)
+    with connect() as conn:
+        cur = conn.execute(
+            f"UPDATE {table} SET {set_sql} WHERE id = ?", values
+        )
+        if cur.rowcount == 0:
+            return None
+        row = conn.execute(f"SELECT * FROM {table} WHERE id = ?", (row_id,)).fetchone()
+        return dict(row) if row else None
 
 
 def delete_row(kind, row_id):

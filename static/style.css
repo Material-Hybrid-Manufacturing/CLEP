@@ -646,9 +646,21 @@ main {
 
 .eq-table tr:last-child td { border-bottom: none; }
 
-.eq-table .delete-btn {
+.eq-table .delete-btn,
+.eq-table .edit-btn {
   padding: 4px 10px;
   font-size: 12px;
+}
+
+.eq-table .row-actions {
+  white-space: nowrap;
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.eq-form .eq-cancel-btn {
+  margin-left: 8px;
 }
 
 .eq-form {

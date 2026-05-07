@@ -24,6 +24,12 @@ def prepare_inputs(payload, lens_row, galvo_row):
     focal_length_mm = float(lens_row["focal_length_mm"])
     z_height_mm = float(payload["z_height_mm"])
 
+    wd_raw = lens_row.get("working_distance_mm") if isinstance(lens_row, dict) else lens_row["working_distance_mm"]
+    if wd_raw is None or wd_raw == "":
+        z_reference_mm = focal_length_mm
+    else:
+        z_reference_mm = float(wd_raw)
+
     if payload.get("expander_on"):
         magnification = float(payload["magnification"])
         laser_diameter_mm = float(payload["laser_diameter_mm"])
@@ -50,7 +56,7 @@ def prepare_inputs(payload, lens_row, galvo_row):
         "wavelength_m": wavelength_nm * 1e-9,
         "focal_length_m": focal_length_mm * 1e-3,
         "w_in_m": w_in_mm * 1e-3,
-        "z_offset_m": (z_height_mm - focal_length_mm) * 1e-3,
+        "z_offset_m": (z_height_mm - z_reference_mm) * 1e-3,
         "wavelength_nm": wavelength_nm,
         "w_in_mm": w_in_mm,
     }

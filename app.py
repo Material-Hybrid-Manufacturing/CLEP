@@ -34,9 +34,18 @@ def too_large(_):
     return jsonify({"error": "image too large (max 10 MB)"}), 413
 
 
+def _read_version():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "version.txt")
+    try:
+        with open(path) as f:
+            return f.read().strip() or "0.0"
+    except FileNotFoundError:
+        return "0.0"
+
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", app_version=_read_version())
 
 
 @app.route("/calculate", methods=["POST"])
@@ -84,6 +93,20 @@ def add_equipment(kind):
     return jsonify(row), 201
 
 
+@app.route("/equipment/<kind>/<int:row_id>", methods=["PUT", "PATCH"])
+def update_equipment(kind, row_id):
+    payload = request.get_json(silent=True) or {}
+    try:
+        row = database.update_row(kind, row_id, payload)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    if row is None:
+        return jsonify({"error": "not found"}), 404
+    return jsonify(row)
+
+
 @app.route("/equipment/<kind>/<int:row_id>", methods=["DELETE"])
 def delete_equipment(kind, row_id):
     try:
@@ -100,13 +123,7 @@ def sensor_z():
 
 @app.route("/version", methods=["GET"])
 def version():
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "version.txt")
-    try:
-        with open(path) as f:
-            v = f.read().strip()
-    except FileNotFoundError:
-        v = "0.0"
-    return jsonify({"version": v})
+    return jsonify({"version": _read_version()})
 
 
 # ---------------------------------------------------------------------------

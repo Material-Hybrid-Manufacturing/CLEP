@@ -25,6 +25,7 @@
       ["manufacturer", "Manufacturer"],
       ["model_number", "Model"],
       ["focal_length_mm", "f (mm)"],
+      ["working_distance_mm", "WD (mm)"],
       ["field_size_mm", "Field (mm)"],
       ["optimized_wavelength_nm", "λ (nm)"],
       ["input_aperture_mm", "Aperture (mm)"],
@@ -110,6 +111,7 @@
     fill(galvoSel, state.galvo, (r) => `${r.manufacturer} ${r.model_number}`);
     fill(lensSel, state.lens, (r) => `${r.manufacturer} ${r.model_number} (f=${r.focal_length_mm}mm)`);
 
+    updateWorkingDistanceWarning();
     runCalculation();
   }
 
@@ -129,9 +131,13 @@
           html += "<tr>";
           cols.forEach(([key]) => {
             const val = row[key];
-            html += `<td>${val === null || val === undefined ? "" : String(val)}</td>`;
+            const isEmpty = val === null || val === undefined || val === "";
+            const display = isEmpty
+              ? (key === "working_distance_mm" ? "—" : "")
+              : String(val);
+            html += `<td>${display}</td>`;
           });
-          html += `<td><button type="button" class="delete-btn" data-kind="${kind}" data-id="${row.id}">Delete</button></td>`;
+          html += `<td class="row-actions"><button type="button" class="edit-btn" data-kind="${kind}" data-id="${row.id}">Edit</button><button type="button" class="delete-btn" data-kind="${kind}" data-id="${row.id}">Delete</button></td>`;
           html += "</tr>";
         });
       }
@@ -147,6 +153,53 @@
         await fetchAll();
       });
     });
+
+    document.querySelectorAll(".edit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const { kind, id } = btn.dataset;
+        const row = state[kind].find((r) => String(r.id) === String(id));
+        if (!row) return;
+        const form = document.querySelector(`.eq-form[data-kind="${kind}"]`);
+        setFormMode(form, "edit", row);
+      });
+    });
+  }
+
+  function setFormMode(form, mode, row) {
+    const heading = form.querySelector("h3");
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (!form.dataset.origHeading) {
+      form.dataset.origHeading = heading.textContent;
+      form.dataset.origSubmitText = submitBtn.textContent;
+    }
+    if (mode === "edit" && row) {
+      form.dataset.editId = String(row.id);
+      heading.textContent = form.dataset.origHeading.replace(/^Add New /, "Edit ");
+      submitBtn.textContent = "Save";
+      Array.from(form.elements).forEach((el) => {
+        if (!el.name) return;
+        const v = row[el.name];
+        el.value = v === null || v === undefined ? "" : String(v);
+      });
+      let cancelBtn = form.querySelector(".eq-cancel-btn");
+      if (!cancelBtn) {
+        cancelBtn = document.createElement("button");
+        cancelBtn.type = "button";
+        cancelBtn.className = "eq-cancel-btn";
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.addEventListener("click", () => setFormMode(form, "add"));
+        submitBtn.insertAdjacentElement("afterend", cancelBtn);
+      }
+      cancelBtn.classList.remove("hidden");
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      delete form.dataset.editId;
+      form.reset();
+      if (form.dataset.origHeading) heading.textContent = form.dataset.origHeading;
+      if (form.dataset.origSubmitText) submitBtn.textContent = form.dataset.origSubmitText;
+      const cancelBtn = form.querySelector(".eq-cancel-btn");
+      if (cancelBtn) cancelBtn.classList.add("hidden");
+    }
   }
 
   document.querySelectorAll(".eq-form").forEach((form) => {
@@ -154,29 +207,31 @@
       e.preventDefault();
       const kind = form.dataset.kind;
       const data = {};
-      new FormData(form).forEach((v, k) => {
-        if (v === "" || v === null) return;
-        data[k] = isNaN(Number(v)) || k === "manufacturer" || k === "model_number" || k === "notes"
-          ? v
-          : Number(v);
+      Array.from(form.elements).forEach((el) => {
+        if (!el.name) return;
+        const v = el.value;
+        if (v === "") {
+          data[el.name] = null;
+          return;
+        }
+        data[el.name] = el.type === "number" ? Number(v) : v;
       });
-      // Numeric fields: coerce explicitly
-      ["input_aperture_mm", "optimized_wavelength_nm", "full_mechanical_angle_deg",
-       "full_optical_angle_deg", "focal_length_mm", "field_size_mm",
-       "magnification", "input_beam_diameter_mm", "output_beam_diameter_mm"]
-        .forEach((k) => { if (data[k] !== undefined) data[k] = Number(data[k]); });
 
-      const res = await fetch(`/equipment/${kind}`, {
-        method: "POST",
+      const editId = form.dataset.editId;
+      const url = editId ? `/equipment/${kind}/${editId}` : `/equipment/${kind}`;
+      const method = editId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Failed" }));
-        alert(`Add failed: ${err.error || res.statusText}`);
+        alert(`${editId ? "Save" : "Add"} failed: ${err.error || res.statusText}`);
         return;
       }
-      form.reset();
+      setFormMode(form, "add");
       await fetchAll();
     });
   });
@@ -200,8 +255,21 @@
     dof: document.getElementById("out-dof"),
     err: document.getElementById("calc-error"),
     mismatch: document.getElementById("mismatch-warning"),
+    workingDistance: document.getElementById("working-distance-warning"),
     apertureHint: document.getElementById("aperture-hint"),
   };
+
+  function updateWorkingDistanceWarning() {
+    const lensId = inputs.lens.value;
+    if (!lensId) {
+      out.workingDistance.classList.add("hidden");
+      return;
+    }
+    const lens = state.lens.find((r) => String(r.id) === String(lensId));
+    const wd = lens && lens.working_distance_mm;
+    const missing = wd === null || wd === undefined || wd === "";
+    out.workingDistance.classList.toggle("hidden", !missing);
+  }
 
   const expanderToggle = document.getElementById("expander-toggle");
   const expanderFields = document.getElementById("expander-fields");
@@ -229,6 +297,8 @@
       el.addEventListener("input", scheduleCalc);
       el.addEventListener("change", scheduleCalc);
     });
+
+  inputs.lens.addEventListener("change", updateWorkingDistanceWarning);
 
   function fmt(value, digits) {
     if (value === null || value === undefined || !isFinite(value)) return "—";
