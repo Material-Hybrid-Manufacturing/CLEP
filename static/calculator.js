@@ -373,8 +373,12 @@
   // ============================================================
   function fmtNum(n, digits) {
     if (n === null || n === undefined || !isFinite(n)) return "—";
-    if (Math.abs(n) >= 1000) return Number(n).toFixed(0);
-    return Number(n).toFixed(digits);
+    if (n === 0) return "0";
+    const abs = Math.abs(n);
+    if (abs >= 1000) return Number(n).toFixed(0);
+    const fixed = Number(n).toFixed(digits);
+    if (Number(fixed) === 0) return Number(n).toExponential(2);
+    return fixed;
   }
 
   function getSpotDiameterUm() {
