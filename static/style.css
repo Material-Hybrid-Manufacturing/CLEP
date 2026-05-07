@@ -1523,6 +1523,14 @@ body.dialog-open #app-main { visibility: hidden; }
   letter-spacing: 0.02em;
 }
 
+.h2-note {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--fg-soft);
+  letter-spacing: 0;
+  margin-left: 6px;
+}
+
 .calc-panel .field > span,
 .calc-panel .output-label,
 .calc-panel .nudge-label,
