@@ -67,6 +67,14 @@ SCHEMA = {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """,
+    "lens_reference_sheets": """
+        CREATE TABLE IF NOT EXISTS lens_reference_sheets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            original_filename TEXT NOT NULL,
+            stored_filename TEXT NOT NULL,
+            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
     "experiments": """
         CREATE TABLE IF NOT EXISTS experiments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -453,6 +461,38 @@ def shape_type_names():
     with connect() as conn:
         rows = conn.execute("SELECT name FROM substrate_shape_types").fetchall()
         return {r["name"] for r in rows}
+
+
+def list_lens_reference_sheets():
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM lens_reference_sheets ORDER BY datetime(uploaded_at) DESC, id DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def insert_lens_reference_sheet(original_filename, stored_filename):
+    with connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO lens_reference_sheets (original_filename, stored_filename) VALUES (?, ?)",
+            (original_filename, stored_filename),
+        )
+        new_id = cur.lastrowid
+        row = conn.execute(
+            "SELECT * FROM lens_reference_sheets WHERE id = ?", (new_id,)
+        ).fetchone()
+        return dict(row)
+
+
+def delete_lens_reference_sheet(row_id):
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM lens_reference_sheets WHERE id = ?", (row_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        conn.execute("DELETE FROM lens_reference_sheets WHERE id = ?", (row_id,))
+        return dict(row)
 
 
 def filter_options():

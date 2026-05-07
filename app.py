@@ -23,6 +23,11 @@ BEAMP_UPLOAD_DIR = os.path.join(
 )
 os.makedirs(BEAMP_UPLOAD_DIR, exist_ok=True)
 
+LENS_REFERENCE_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "static", "uploads", "lens-references"
+)
+os.makedirs(LENS_REFERENCE_DIR, exist_ok=True)
+
 ALLOWED_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp", "gif"}
 ALLOWED_BEAMP_EXTS = {"beamp"}
 
@@ -113,6 +118,58 @@ def delete_equipment(kind, row_id):
         database.delete_row(kind, row_id)
     except ValueError as e:
         return jsonify({"error": str(e)}), 404
+    return ("", 204)
+
+
+def _save_lens_reference(file_storage):
+    if file_storage is None or not file_storage.filename:
+        raise ValueError("no file provided")
+    original = file_storage.filename
+    if "." not in original:
+        raise ValueError("image file is missing an extension")
+    ext = original.rsplit(".", 1)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTS:
+        raise ValueError(f"image extension .{ext} is not allowed")
+    stored = f"{secrets.token_hex(16)}.{ext}"
+    file_storage.save(os.path.join(LENS_REFERENCE_DIR, stored))
+    return original, stored
+
+
+def _lens_reference_view(row):
+    return {
+        "id": row["id"],
+        "original_filename": row["original_filename"],
+        "url": f"/static/uploads/lens-references/{row['stored_filename']}",
+        "uploaded_at": row["uploaded_at"],
+    }
+
+
+@app.route("/lens-references", methods=["GET"])
+def list_lens_references_route():
+    return jsonify([_lens_reference_view(r) for r in database.list_lens_reference_sheets()])
+
+
+@app.route("/lens-references", methods=["POST"])
+def upload_lens_reference_route():
+    if "image" not in request.files:
+        return jsonify({"error": "no image uploaded"}), 400
+    try:
+        original, stored = _save_lens_reference(request.files["image"])
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    row = database.insert_lens_reference_sheet(original, stored)
+    return jsonify(_lens_reference_view(row)), 201
+
+
+@app.route("/lens-references/<int:row_id>", methods=["DELETE"])
+def delete_lens_reference_route(row_id):
+    row = database.delete_lens_reference_sheet(row_id)
+    if row is None:
+        return jsonify({"error": "not found"}), 404
+    try:
+        os.remove(os.path.join(LENS_REFERENCE_DIR, row["stored_filename"]))
+    except FileNotFoundError:
+        pass
     return ("", 204)
 
 

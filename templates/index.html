@@ -223,6 +223,16 @@
           <label class="field"><span>Notes</span><input name="notes"></label>
           <button type="submit">Add</button>
         </form>
+
+        <div class="lens-references" id="lens-references">
+          <h3>F-Theta Lens Reference Sheets</h3>
+          <p class="hint italic">Upload screenshots of lens spec tables from vendor datasheets. Click an image to view full size.</p>
+          <form class="lens-ref-form" id="lens-ref-form">
+            <input type="file" id="lens-ref-file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+            <button type="submit">Upload</button>
+          </form>
+          <div class="lens-ref-grid" id="lens-ref-grid"></div>
+        </div>
       </div>
 
       <div class="eq-pane hidden" data-eq-pane="expander">

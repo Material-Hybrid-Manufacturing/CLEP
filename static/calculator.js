@@ -444,6 +444,73 @@
   recomputeFluence();
 
   // ============================================================
+  // F-Theta Lens reference sheets (uploaded spec-table images)
+  // ============================================================
+  const lensRefForm = document.getElementById("lens-ref-form");
+  const lensRefFile = document.getElementById("lens-ref-file");
+  const lensRefGrid = document.getElementById("lens-ref-grid");
+
+  async function fetchLensReferences() {
+    if (!lensRefGrid) return;
+    try {
+      const res = await fetch("/lens-references");
+      const rows = await res.json();
+      renderLensReferences(rows);
+    } catch (e) {
+      lensRefGrid.innerHTML = '<div class="hint italic">Could not load reference sheets.</div>';
+    }
+  }
+
+  function renderLensReferences(rows) {
+    if (!rows.length) {
+      lensRefGrid.innerHTML = '<div class="hint italic">No reference sheets uploaded yet.</div>';
+      return;
+    }
+    lensRefGrid.innerHTML = rows.map((r) => `
+      <div class="lens-ref-card">
+        <a href="${r.url}" target="_blank" rel="noopener">
+          <img src="${r.url}" alt="${escapeHtml(r.original_filename)}">
+        </a>
+        <div class="lens-ref-meta">
+          <span class="lens-ref-name" title="${escapeHtml(r.original_filename)}">${escapeHtml(r.original_filename)}</span>
+          <button type="button" class="lens-ref-delete" data-id="${r.id}">Delete</button>
+        </div>
+      </div>
+    `).join("");
+
+    lensRefGrid.querySelectorAll(".lens-ref-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this reference sheet?")) return;
+        await fetch(`/lens-references/${btn.dataset.id}`, { method: "DELETE" });
+        fetchLensReferences();
+      });
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  if (lensRefForm) {
+    lensRefForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!lensRefFile.files.length) return;
+      const fd = new FormData();
+      fd.append("image", lensRefFile.files[0]);
+      const res = await fetch("/lens-references", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Upload failed" }));
+        alert(`Upload failed: ${err.error || res.statusText}`);
+        return;
+      }
+      lensRefForm.reset();
+      fetchLensReferences();
+    });
+  }
+
+  // ============================================================
   // Version tag
   // ============================================================
   async function fetchVersion() {
@@ -464,4 +531,5 @@
   // ============================================================
   fetchAll();
   fetchVersion();
+  fetchLensReferences();
 })();
