@@ -1604,3 +1604,34 @@ body.dialog-open #app-main { visibility: hidden; }
     inset 0 1px 0 rgba(255, 255, 255, 0.10),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
+
+/* Mobile: keep calculator inputs and outputs inside the card.
+   Long <select> options (lens dropdown) push the intrinsic min-width
+   above viewport on phones; min-width:0 lets them shrink. Outputs
+   stack label-over-value so long output names don't fight the value. */
+@media (max-width: 600px) {
+  .calc-panel { padding: 14px; }
+  .calc-panel h2 { font-size: 16px; margin-bottom: 12px; }
+
+  .calc-panel .field { min-width: 0; }
+  .calc-panel .field > input,
+  .calc-panel .field > select,
+  .calc-panel .field > textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .calc-panel .output {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+  .calc-panel .output-label,
+  .calc-panel .output-value { min-width: 0; }
+  .calc-panel .output-value { font-size: 16px; }
+
+  .calc-panel .equations,
+  .calc-panel .eq-body { word-break: break-word; }
+}
