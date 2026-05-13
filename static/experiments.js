@@ -37,6 +37,17 @@
     };
   }
 
+  function toast(message, kind) {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+    const el = document.createElement("div");
+    el.className = "toast toast-" + (kind || "info");
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => { el.classList.add("toast-leaving"); }, 3600);
+    setTimeout(() => { el.remove(); }, 4000);
+  }
+
   // ============================================================
   // Data loading
   // ============================================================
@@ -478,6 +489,27 @@
 
   $("new-specimen-btn").addEventListener("click", openOverlay);
   $("overlay-close-btn").addEventListener("click", closeOverlay);
+
+  $("backup-btn").addEventListener("click", async () => {
+    const btn = $("backup-btn");
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add("loading");
+    try {
+      const res = await fetch("/backup", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        toast(`Backed up ${data.files} files in ${data.duration_s}s`, "success");
+      } else {
+        toast(`Backup failed: ${data.error || res.statusText}`, "error");
+      }
+    } catch (e) {
+      toast(`Backup failed: ${e.message}`, "error");
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+    }
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {

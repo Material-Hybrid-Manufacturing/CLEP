@@ -4,6 +4,7 @@ import secrets
 from flask import Flask, jsonify, render_template, request, send_from_directory
 from werkzeug.exceptions import RequestEntityTooLarge
 
+import backup
 import calculations
 import database
 import experiments
@@ -273,6 +274,7 @@ def create_experiment():
         "notes": (form.get("notes") or "").strip() or None,
     }
     row = database.insert_experiment(payload)
+    backup.trigger_backup_async("auto:create")
     return jsonify(row), 201
 
 
@@ -285,6 +287,7 @@ def update_experiment_route(row_id):
     row = database.update_experiment_notes(row_id, payload.get("notes"))
     if row is None:
         return jsonify({"error": "experiment not found"}), 404
+    backup.trigger_backup_async("auto:notes")
     return jsonify(row)
 
 
@@ -300,6 +303,7 @@ def delete_experiment_route(row_id):
             os.remove(os.path.join(UPLOAD_DIR, name))
         except FileNotFoundError:
             pass
+    backup.trigger_backup_async("auto:delete")
     return ("", 204)
 
 
@@ -370,6 +374,7 @@ def update_experiment_full_route(row_id):
         except FileNotFoundError:
             pass
 
+    backup.trigger_backup_async("auto:update")
     return jsonify(row)
 
 
@@ -413,6 +418,13 @@ def delete_test_type_route(row_id):
 @app.route("/experiments/filter-options", methods=["GET"])
 def filter_options_route():
     return jsonify(database.filter_options())
+
+
+@app.route("/backup", methods=["POST"])
+def backup_route():
+    result = backup.run_backup("manual")
+    status = 200 if result["ok"] else 500
+    return jsonify(result), status
 
 
 # ---------------------------------------------------------------------------
