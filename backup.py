@@ -23,7 +23,8 @@ STAGING_DIR = os.path.join(REPO_DIR, ".backup-staging")
 UPLOAD_DIR = os.path.join(REPO_DIR, "static", "uploads", "experiments")
 LOG_PATH = os.path.join(REPO_DIR, "backup.log")
 
-RCLONE_REMOTE = "gdrive:CLEP-Backup"
+RCLONE_REMOTE = "gdrive:CLEP backup"
+RCLONE_ROOT_FOLDER_ID = "1JtCggJEcy7LNeF1mQZkYhk-Plnct9i7E"  # "CLEP work" in Drive
 RCLONE_TIMEOUT_S = 600
 
 _lock = threading.Lock()
@@ -120,7 +121,11 @@ def _build_staging():
 
 def _rclone_sync():
     return subprocess.run(
-        ["rclone", "sync", STAGING_DIR, RCLONE_REMOTE, "--fast-list"],
+        [
+            "rclone", "sync", STAGING_DIR, RCLONE_REMOTE,
+            "--drive-root-folder-id", RCLONE_ROOT_FOLDER_ID,
+            "--fast-list",
+        ],
         capture_output=True,
         text=True,
         timeout=RCLONE_TIMEOUT_S,
