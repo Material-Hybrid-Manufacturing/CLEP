@@ -108,8 +108,7 @@ def _build_staging():
         if image_path:
             name = image_path.rsplit("/", 1)[-1]
             src = os.path.join(UPLOAD_DIR, name)
-            ext = name.rsplit(".", 1)[-1] if "." in name else "bin"
-            dst = os.path.join(folder, f"image.{ext}")
+            dst = os.path.join(folder, name)
             try:
                 _hardlink_or_copy(src, dst)
                 files_written += 1
